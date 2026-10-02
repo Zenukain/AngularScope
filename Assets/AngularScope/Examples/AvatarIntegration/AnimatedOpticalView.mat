@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: AnimatedOpticalView
+  m_Name: Animated Optical View
   m_Shader: {fileID: 4800000, guid: 1f369bbf19d65494ea39d5fafabf3925, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -44,7 +44,7 @@ Material:
     - _ExitPupilRadius: 0.01875
     - _EyeBoxLimit: 0.873
     - _EyeReliefDist: 0.12
-    - _EyeReliefMode: 0
+    - _EyeReliefMode: 1
     - _EyeReliefTol: 0.01
     - _FieldTanHalfAngle: 0.16
     - _IlluminationEmission: 1
