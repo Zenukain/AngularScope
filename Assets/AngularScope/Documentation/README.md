@@ -78,28 +78,33 @@ product. There is no extra lens-aperture mask or whole-image distance fade.
 _OpticalShadowSoftness controls the moving edge; _PupilFieldCoupling and
 _AxialVignette are empirical tuning controls, not physical lens prescriptions.
 
-## Independent reticle layers
+## Reticle and illumination overlay
 
-Main layer: _ReticleTex, _ReticleColor, _EmissionPower, _ReticleScale,
+Reticle layer: _ReticleTex, _ReticleColor, _EmissionPower, _ReticleScale,
 _ReticleOffset and _ReticleFocalPlane.
-Optional centre overlay: _Reticle2Tex, _Reticle2Color, _Reticle2Emission,
-_Reticle2Scale, _Reticle2Offset, _Reticle2FocalPlane and _Reticle2Opacity.
-Opacity 0 disables the second layer by default; assign an RGBA centre image
+Optional illumination overlay: _IlluminationTex, _IlluminationColor, _IlluminationEmission,
+_IlluminationScale, _IlluminationOffset, _IlluminationFocalPlane and _IlluminationOpacity.
+Opacity 0 disables the illumination overlay by default; assign an RGBA centre image
 before setting it to 1. Its white placeholder would obscure the scene.
 
 For black etched graduations plus illuminated red centre, supply separate
-white-on-transparent images, tint the main black (0,0,0), tint the second red,
-and enable second opacity. Black multiplied by brightness remains black.
+white-on-transparent images, tint the main black (0,0,0), tint the illumination overlay red,
+and enable its opacity. Black multiplied by brightness remains black.
 This approximates etched-line contrast through image composition; it does
 not simulate scattering or absorption in illuminated glass.
-Texture alpha defines both layers' coverage. Second opacity adds a strength
-control; tint color alpha is not used. Layer two is composited over layer one.
+Texture alpha defines both layers' coverage. Overlay opacity adds a strength
+control; tint color alpha is not used. The illumination overlay is composited over the reticle.
 
 Each focal-plane selector: 0 = SFP, 1 = FFP. SFP apparent size stays fixed.
 FFP apparent size scales with optical M, matching SFP size at the shared
 _ReticleRefMagnification. This is a positive Float, not limited to 6x:
 for a 10x size reference, set it to 10. A mark at 1x then has one-tenth its
 reference apparent size. Both layers may use different focal-plane selections.
+
+The illumination overlay is not restricted to a dot: rings, horseshoes and
+other illuminated patterns work too. For pre-release materials or animations
+using the old `_Reticle2` prefix, rename those property keys/bindings to
+`_Illumination` when upgrading; existing values do not migrate automatically.
 For consistent geometry, size-reference calibration must be deliberate.
 At low zoom, thin FFP marks can become subpixel and lose visibility; choose
 appropriate line widths, texture filtering and mipmaps for your target image.

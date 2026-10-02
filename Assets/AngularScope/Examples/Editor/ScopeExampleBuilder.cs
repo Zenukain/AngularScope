@@ -35,13 +35,13 @@ namespace AngularScope.Examples.Editor
             var lensMaterial = new Material(shader) { name = "Example Optical View" };
             lensMaterial.SetTexture("_MainTex", rt);
             lensMaterial.SetTexture("_ReticleTex", Reticle(false));
-            lensMaterial.SetTexture("_Reticle2Tex", Reticle(true));
+            lensMaterial.SetTexture("_IlluminationTex", Reticle(true));
             lensMaterial.SetColor("_ReticleColor", Color.black);
-            lensMaterial.SetColor("_Reticle2Color", Color.red);
-            lensMaterial.SetFloat("_Reticle2Opacity", 1);
-            lensMaterial.SetFloat("_Reticle2Emission", 1);
+            lensMaterial.SetColor("_IlluminationColor", Color.red);
+            lensMaterial.SetFloat("_IlluminationOpacity", 1);
+            lensMaterial.SetFloat("_IlluminationEmission", 1);
             lensMaterial.SetFloat("_ReticleScale", .278f);
-            lensMaterial.SetFloat("_Reticle2Scale", .278f);
+            lensMaterial.SetFloat("_IlluminationScale", .278f);
             lensMaterial = SaveAsset(lensMaterial, Root + "/Materials/ExampleOpticalView.mat");
 
             var scope = new GameObject("AngularScope Example");

@@ -66,8 +66,8 @@ namespace AngularScope.Examples
             imageCamera.aspect = 1;
             runtimeMaterial.SetFloat("_Magnification", magnification);
             runtimeMaterial.SetFloat("_ReticleFocalPlane", firstFocalPlane ? 1 : 0);
-            // The red centre follows the same focal plane in this example.
-            runtimeMaterial.SetFloat("_Reticle2FocalPlane", firstFocalPlane ? 1 : 0);
+            // The illumination overlay follows the same focal plane in this example.
+            runtimeMaterial.SetFloat("_IlluminationFocalPlane", firstFocalPlane ? 1 : 0);
             runtimeMaterial.SetFloat("_ExitPupilMode", linkedExitPupil ? 1 : 0);
         }
 

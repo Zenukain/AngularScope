@@ -15,13 +15,13 @@ Shader "AngularScope/Optical View"
         _ReticleScale ("Reticle Size", Range(0.1,5)) = 0.278
         _ReticleOffset ("Reticle Offset", Vector) = (0,0,0,0)
         [Enum(SFP,0,FFP,1)] _ReticleFocalPlane ("Reticle Focal Plane", Float) = 0
-        _Reticle2Tex ("Centre / Second Reticle (RGBA)", 2D) = "white" {}
-        [HDR] _Reticle2Color ("Second Reticle Color", Color) = (1,0,0,1)
-        _Reticle2Emission ("Second Reticle Brightness", Range(0,10)) = 1
-        _Reticle2Opacity ("Second Reticle Opacity (0 = Disabled)", Range(0,1)) = 0
-        _Reticle2Scale ("Second Reticle Size", Range(0.1,5)) = 0.278
-        _Reticle2Offset ("Second Reticle Offset", Vector) = (0,0,0,0)
-        [Enum(SFP,0,FFP,1)] _Reticle2FocalPlane ("Second Reticle Focal Plane", Float) = 0
+        _IlluminationTex ("Illumination Overlay (RGBA)", 2D) = "white" {}
+        [HDR] _IlluminationColor ("Illumination Overlay Color", Color) = (1,0,0,1)
+        _IlluminationEmission ("Illumination Overlay Brightness", Range(0,10)) = 1
+        _IlluminationOpacity ("Illumination Overlay Opacity (0 = Disabled)", Range(0,1)) = 0
+        _IlluminationScale ("Illumination Overlay Size", Range(0.1,5)) = 0.278
+        _IlluminationOffset ("Illumination Overlay Offset", Vector) = (0,0,0,0)
+        [Enum(SFP,0,FFP,1)] _IlluminationFocalPlane ("Illumination Overlay Focal Plane", Float) = 0
         _ReticleRefMagnification ("FFP Size Reference Magnification", Float) = 6
         _TanHalfBaseFov ("Tan Half Minimum-Zoom Camera FOV", Float) = 0.17
         _ReticleTanHalfFov ("Reticle Angular Calibration (tan half angle)", Float) = 0.5773503
@@ -72,12 +72,12 @@ Shader "AngularScope/Optical View"
             };
             // View and reticle composition. Keep these property names stable:
             // materials and existing animations depend on the serialized ABI.
-            sampler2D _MainTex, _ReticleTex, _Reticle2Tex;
+            sampler2D _MainTex, _ReticleTex, _IlluminationTex;
             float4 _MainTex_TexelSize;
             float4 _Color, _ReticleColor, _ReticleOffset;
-            float4 _Reticle2Color, _Reticle2Offset;
-            float _ReticleFocalPlane, _Reticle2FocalPlane, _ReticleRefMagnification;
-            float _Reticle2Emission, _Reticle2Opacity, _Reticle2Scale;
+            float4 _IlluminationColor, _IlluminationOffset;
+            float _ReticleFocalPlane, _IlluminationFocalPlane, _ReticleRefMagnification;
+            float _IlluminationEmission, _IlluminationOpacity, _IlluminationScale;
             float4 _AxisRight, _AxisUp, _AxisForward;
             float4 _LensCenter;
             float _ExitPupilRadius, _AxialVignette;
@@ -210,12 +210,12 @@ Shader "AngularScope/Optical View"
                 fixed3 composed=BlendReticle(image,reticle,_ReticleColor.rgb,_EmissionPower,1);
                 // Material-uniform condition; do not sample an unused overlay.
                 // Whether this saves GPU work depends on the target compiler.
-                if(_Reticle2Opacity>0)
+                if(_IlluminationOpacity>0)
                 {
-                    fixed4 centre=SampleReticleLayer(_Reticle2Tex,
-                        ReticleProjectionUV(slope,_Reticle2FocalPlane),_Reticle2Scale,_Reticle2Offset.xy);
-                    composed=BlendReticle(composed,centre,_Reticle2Color.rgb,
-                                          _Reticle2Emission,saturate(_Reticle2Opacity));
+                    fixed4 illumination=SampleReticleLayer(_IlluminationTex,
+                        ReticleProjectionUV(slope,_IlluminationFocalPlane),_IlluminationScale,_IlluminationOffset.xy);
+                    composed=BlendReticle(composed,illumination,_IlluminationColor.rgb,
+                                          _IlluminationEmission,saturate(_IlluminationOpacity));
                 }
                 return composed;
             }
