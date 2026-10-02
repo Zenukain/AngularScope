@@ -21,11 +21,19 @@ These are actual captures of the included procedural example, not illustrations.
 | | 1x | 6x |
 |---|---|---|
 | SFP | ![SFP at 1x](docs/images/sfp-1x.png) | ![SFP at 6x](docs/images/sfp-6x.png) |
-| FFP | ![FFP at 1x](docs/images/ffp-1x.png) | ![FFP at 6x](docs/images/ffp-6x.png) |
+| FFP (reference = 6) | ![FFP at 1x](docs/images/ffp-1x.png) | ![FFP at 6x](docs/images/ffp-6x.png) |
 
 **FFP image note:** This example uses `_ReticleRefMagnification = 6`. FFP reticle size relative to SFP is `current magnification / reference magnification`: at 1x it is one-sixth the SFP size, and at 6x it matches SFP. The two 6x images therefore intentionally look identical. This setting calibrates reticle size; it does not disable FFP zoom scaling.
 
 To match SFP size at 1x instead, set `_ReticleRefMagnification = 1`; the FFP reticle will then be six times that size at 6x, so outer marks may extend beyond the visible field. Choose the reference and reticle size together for your design. See the [reticle and illumination guide](Assets/AngularScope/Documentation/README.md#reticle-and-illumination-overlay).
+
+### Alternative FFP reference: 1x
+
+Only `_ReticleRefMagnification` is changed to `1` in the captures below; the reticle scales and camera setup are unchanged. At 1x the reticle matches the SFP size above. At 6x both the etched reticle and illuminated centre are six times larger, and the outer marks extend beyond the visible field. This is an alternative size calibration, not a different FFP mode. The included example still defaults to a reference of `6`.
+
+| | 1x | 6x |
+|---|---|---|
+| FFP (reference = 1) | ![FFP at 1x with reference magnification 1](docs/images/ffp-ref1-1x.png) | ![FFP at 6x with reference magnification 1](docs/images/ffp-ref1-6x.png) |
 
 The black etched cross and red illuminated centre are independent texture layers.
 
