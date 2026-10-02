@@ -1,10 +1,10 @@
 # AngularScope
 
-> **AI disclaimer:** Generative AI was used to develop the code and documentation, with human review and iterative testing in Unity and VR. This is an experimental optical approximation, not a physically accurate simulation or a guarantee of compatibility with every project. Review and test it in your own setup before use.
+> **AI disclaimer:** Code and documentation were developed with generative AI, human review, and iterative Unity/VR testing. This is an optical approximation; test it in your own setup.
 
 A configurable optical-view shader and a standalone Unity example for scope creators. Includes variable magnification, SFP/FFP reticles, two independent reticle layers, a sharp field stop, and a moving soft eye-box shadow.
 
-Built for Unity's **Built-in Render Pipeline on PC**. The example was tested in Unity 2022.3.22f1. This is a geometric approximation, not a physical ray-traced optical system.
+Built for Unity's **Built-in Render Pipeline on PC**, tested in Unity 2022.3.22f1.
 
 ## Try it
 
@@ -14,7 +14,7 @@ Built for Unity's **Built-in Render Pipeline on PC**. The example was tested in 
 
 For the shader and documentation only, download [the smaller shader-only package](dist/AngularScope_ShaderOnly.unitypackage).
 
-The shader **requires a scene-image RenderTexture**. A separate camera creates the magnified image; the shader does not replace that camera. **PC VRChat avatars can use it, not just worlds.** The scripted demo is not an upload-ready avatar installer: replace its Unity MonoBehaviour with avatar FX animations. The example package includes an animation-driven rig, 1x/6x clips and a continuous zoom curve; follow the [PC avatar integration guide](Assets/AngularScope/Documentation/AvatarIntegration.md).
+The shader **requires a separate camera and RenderTexture**. **PC VRChat avatars can use it, not just worlds.** For avatars, use the included animation-driven rig instead of the scripted demo; it supplies endpoint clips and a continuous zoom curve, not an automatic installer. Follow the [avatar integration guide](Assets/AngularScope/Documentation/AvatarIntegration.md).
 
 ## Magnification and focal plane
 
@@ -25,13 +25,13 @@ These are actual captures of the included procedural example, not illustrations.
 | SFP | ![SFP at 1x](docs/images/sfp-1x.png) | ![SFP at 6x](docs/images/sfp-6x.png) |
 | FFP (reference = 6) | ![FFP at 1x](docs/images/ffp-1x.png) | ![FFP at 6x](docs/images/ffp-6x.png) |
 
-**FFP image note:** This example uses `_ReticleRefMagnification = 6`. FFP reticle size relative to SFP is `current magnification / reference magnification`: at 1x it is one-sixth the SFP size, and at 6x it matches SFP. The two 6x images therefore intentionally look identical. This setting calibrates reticle size; it does not disable FFP zoom scaling.
+**FFP reference = 6:** relative size is `magnification / reference`: one-sixth SFP at 1x, equal at 6x. The two 6x images intentionally match; FFP scaling remains active.
 
 To match SFP size at 1x instead, set `_ReticleRefMagnification = 1`; the FFP reticle will then be six times that size at 6x, so outer marks may extend beyond the visible field. Choose the reference and reticle size together for your design. See the [reticle and illumination guide](Assets/AngularScope/Documentation/README.md#reticle-and-illumination-overlay).
 
 ### Alternative FFP reference: 1x
 
-Only `_ReticleRefMagnification` is changed to `1` in the captures below; the reticle scales and camera setup are unchanged. At 1x the reticle matches the SFP size above. At 6x both the etched reticle and illuminated centre are six times larger, and the outer marks extend beyond the visible field. This is an alternative size calibration, not a different FFP mode. The included example still defaults to a reference of `6`.
+Only the reference changes to `1` below: reticle and camera settings are unchanged. At 1x it matches SFP; at 6x both layers are six times larger and outer marks are cropped. The example defaults to reference `6`.
 
 | | 1x | 6x |
 |---|---|---|
@@ -50,7 +50,7 @@ Two independent masks shape the view:
 |---|---|
 | ![Sharp circular field stop with the eye on axis and closer to the lens](docs/images/field-stop.png) | ![Soft eye-box shadow with the eye shifted sideways and upward](docs/images/eye-box-shadow.png) |
 
-Both are actual 1x captures with the same material settings: the left camera is on axis, 9 cm behind the rear lens; the right camera is 12 cm behind it and offset by 7 mm horizontally and vertically. Both masks remain enabled in both images. The housing supplies the physical lens boundary. Exit-pupil size can follow magnification or remain fixed for a more forgiving view; this setting controls the soft shadow, not the sharp field stop.
+Both 1x captures keep both masks enabled. Left: on axis at 9cm. Right: 12cm away, offset 7mm horizontally and vertically. The housing supplies the physical boundary. Exit-pupil size may follow zoom or remain fixed for a forgiving view; this affects the soft shadow, not the field stop.
 
 ## Included example
 

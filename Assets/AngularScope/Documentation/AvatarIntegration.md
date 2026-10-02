@@ -55,7 +55,7 @@ between active cameras can make one scope show another scope's view.
 
 The supplied rigid-lens material uses `_EyeReliefMode = 1` (GPUObjectSpace),
 so distance and axial tolerance follow uniform object scaling together with
-the scope. The shader default remains 0 (WorldMetres) for existing materials.
+the scope. New materials also default to this mode; WorldMetres (0) remains available.
 See the main shader guide before switching units on a scaled or skinned rig.
 Do not mark the optical lens Static; dynamic batching is disabled by the shader.
 
@@ -170,8 +170,5 @@ Editor regeneration: **Tools > AngularScope > Build Animation-Driven Integration
 Example**. This overwrites only the generated integration assets, not the original
 demo scene. Duplicate generated assets before personal edits.
 
-Unity 2022.3.22f1 verification: the generated Animator was sampled at 1,001
-normalized zoom values. Maximum FOV error versus the formula was below 0.011
-degrees; magnification error was below 0.000001. Both endpoint clips bound
-the camera and renderer correctly, and a 3.5x scene render was inspected.
-This checks Unity bindings and interpolation, not VRChat upload/safety behavior.
+The Unity fixtures have interpolation/binding checks, not VRChat upload or
+safety validation. Test the final avatar in the client.

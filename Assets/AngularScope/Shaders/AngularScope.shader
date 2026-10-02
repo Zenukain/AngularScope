@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: CC0-1.0
 // Angular scope display with independent field-stop and eyebox masks.
-// No runtime script or additional avatar parameter is required.
+// Display shader; the external scene camera and zoom driver are separate.
 // Projection is calibrated for distant scenery, not a full optical raytrace.
 // See the scope README for calibration, installation and limitations.
 Shader "AngularScope/Optical View"
@@ -65,6 +65,7 @@ Shader "AngularScope/Optical View"
                 float4 vertex : SV_POSITION;
                 float3 eyeRay : TEXCOORD0;
                 float3 lensRay : TEXCOORD1;
+                float2 objectScale : TEXCOORD2;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
                 UNITY_VERTEX_OUTPUT_STEREO
             };
@@ -108,9 +109,10 @@ Shader "AngularScope/Optical View"
                 return frame;
             }
 
-            float2 TransverseCoordinates(float3 direction, ScopeFrame frame)
+            float3 ScopeCoordinates(float3 direction, ScopeFrame frame)
             {
-                return float2(dot(direction,frame.right),dot(direction,frame.up));
+                return float3(dot(direction,frame.right),dot(direction,frame.up),
+                              dot(direction,frame.forward));
             }
 
             float RectangleCoverage(float2 uv)
@@ -127,10 +129,9 @@ Shader "AngularScope/Optical View"
             }
 
             float2 ProjectToLensPlane(float3 ray, float3 lensRay,
-                                     float axial, float lensDepth, ScopeFrame frame)
+                                     float axial, float lensDepth)
             {
-                float3 lensPoint=ray*(lensDepth/max(axial,0.00001))-lensRay;
-                return TransverseCoordinates(lensPoint,frame);
+                return ray.xy*(lensDepth/max(axial,0.00001))-lensRay.xy;
             }
 
             float OpticalFieldCoverage(float2 slope)
@@ -239,36 +240,42 @@ Shader "AngularScope/Optical View"
                 // Compute camera-relative coordinates before interpolation.
                 // Subtracting two large world positions in the fragment shader
                 // loses precision in worlds positioned far from the origin.
-                o.eyeRay=mul((float3x3)UNITY_MATRIX_I_V,UnityObjectToViewPos(v.vertex));
+                // The frame is constant per object/instance. Project rays here
+                // to avoid matrix transforms, normalization and dot products
+                // per fragment; linear coordinates interpolate consistently.
+                ScopeFrame frame=GetScopeFrame();
+                o.objectScale=float2(frame.radialScale,frame.axialScale);
+                o.eyeRay=ScopeCoordinates(mul((float3x3)UNITY_MATRIX_I_V,
+                    UnityObjectToViewPos(v.vertex)),frame);
                 // Lens centre must use the same GPU object space as vertices.
                 // A MeshRenderer uses native local coordinates. Skinned meshes
                 // may bake bone transforms/scale into GPU vertices: calibrate
                 // centre and radii in that resulting space, not raw bindpose
                 // coordinates. Never apply baked scale a second time.
-                o.lensRay=mul((float3x3)UNITY_MATRIX_I_V,UnityObjectToViewPos(float4(_LensCenter.xyz,1)));
+                o.lensRay=ScopeCoordinates(mul((float3x3)UNITY_MATRIX_I_V,
+                    UnityObjectToViewPos(float4(_LensCenter.xyz,1))),frame);
                 return o;
             }
             fixed4 frag(v2f i) : SV_Target
             {
                 UNITY_SETUP_INSTANCE_ID(i);
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
-                ScopeFrame frame=GetScopeFrame();
                 // 1. Angular projection: do not change this to tune eyebox.
                 float3 ray=i.eyeRay;
-                float axial=dot(ray,frame.forward);
-                float2 slope=TransverseCoordinates(ray,frame)/max(axial,0.00001);
+                float axial=ray.z;
+                float2 slope=ray.xy/max(axial,0.00001);
                 float2 uv=0.5+slope/(2*max(_TanHalfBaseFov,0.0001));
                 float inside=RectangleCoverage(uv)*step(0.00001,axial);
-                float lensDepth=dot(i.lensRay,frame.forward);
-                if(_ScopeDebug>0.5 && _ScopeDebug<1.5) return float4(frame.radialScale.xxx,1);
+                float lensDepth=i.lensRay.z;
+                if(_ScopeDebug>0.5 && _ScopeDebug<1.5) return float4(i.objectScale.xxx,1);
                 if(_ScopeDebug>1.5 && _ScopeDebug<2.5) return float4((lensDepth/0.2).xxx,1);
 
                 // 2. Independent coverage masks; both scene and reticle use
                 // their product. No whole-image distance fade is applied.
-                float2 lensXY=ProjectToLensPlane(ray,i.lensRay,axial,lensDepth,frame);
-                float2 eyeOffset=-TransverseCoordinates(i.lensRay,frame);
+                float2 lensXY=ProjectToLensPlane(ray,i.lensRay,axial,lensDepth);
+                float2 eyeOffset=-i.lensRay.xy;
                 // The lens mesh and housing supply the physical boundary.
-                float pupilMask=EyeShadowCoverage(lensXY,eyeOffset,lensDepth,frame.radialScale,frame.axialScale);
+                float pupilMask=EyeShadowCoverage(lensXY,eyeOffset,lensDepth,i.objectScale.x,i.objectScale.y);
                 float fieldMask=OpticalFieldCoverage(slope);
                 if(_ScopeDebug>2.5 && _ScopeDebug<3.5) return float4(fieldMask.xxx,1);
                 if(_ScopeDebug>3.5) return float4(pupilMask.xxx,1);

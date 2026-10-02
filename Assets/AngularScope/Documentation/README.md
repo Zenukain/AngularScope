@@ -51,9 +51,9 @@ The shader-only package does not include these example assets or scripts.
 4. Default optical axes are local right +X, up +Y, forward +Z. The observer
    looks from behind the lens along +Z. _LensCenter defaults to (0,0,0):
    put the rear-lens centre at that origin or enter its actual coordinates.
-5. Start at world eye distance _EyeReliefDist=0.12 metres. Calibrate lens
-   centre and pupil radii for your model rather than treating defaults as
-   measured lens specifications.
+5. Calibrate lens centre, eye relief and pupil radii in GPU object coordinates.
+   Default mode 1 uses local lengths: _EyeReliefDist=0.12 is 12cm only at metric
+   unit scale. Defaults are starting points, not measured lens specifications.
 6. For 1x, set Camera.fieldOfView=19.296091 degrees and _Magnification=1.
    The camera aspect ratio must be 1. At any magnification M, set camera FOV
    to 2*atan(_TanHalfBaseFov/M) in degrees AND _Magnification=M.
@@ -62,7 +62,8 @@ The shader-only package does not include these example assets or scripts.
    must be handled by your own application/avatar setup.
 
 The shader displays an external scene texture; it does NOT replace the
-scene camera or produce real zoom by itself. No runtime script is shipped.
+scene camera or produce real zoom by itself. ShaderOnly ships no runtime script;
+WithExample includes a Unity demo driver and animation-driven integration fixtures.
 The scene camera's extra rendering can dominate total performance cost.
 
 ## Projection and coverage
@@ -128,28 +129,20 @@ _ReticleScale = _FieldTanHalfAngle / _ReticleTanHalfFov
               = 0.16 / 0.5773503 ~= 0.277128
 ```
 
-The existing preset 0.278 is retained; its texture-edge radius is about
-1.00315 times the field radius. The small difference is not necessarily less
-than one pixel at every resolution. A square's corners still lie outside a
-circle: this formula aligns the cardinal edges, not all four corners.
+The retained 0.278 preset gives 1.00315 times the field radius. The formula
+aligns cardinal texture edges, not square corners or ink endpoints.
 
 To fill a fraction q of the field radius, use `q * field / calibration`.
 For FFP at a different magnification M, multiply the resulting size by
 `_ReticleRefMagnification / M` to obtain that fraction specifically at M.
 The illumination layer follows the same equations with `_IlluminationScale`.
 
-These formulas concern the texture boundary, not the drawn marks. Transparent
-margins, nonzero offsets and the physical lens/housing boundary change the
-visible fit. If a mark's outer extent is a fraction a of the centre-to-texture
-edge distance, divide the calculated size by a to fit that mark instead.
-The example etched cross has margins; fitting its texture does not make every
-ink endpoint touch the field stop.
+Margins, offsets and housing affect visible fit. If ink extends a fraction a
+of centre-to-texture-edge distance, divide the calculated size by a. The example
+cross has margins: fitting the texture does not align every ink endpoint.
 
-Field radius and reticle calibration remain independent properties, with
-their existing serialized names and meanings. If you change the field radius
-and want to keep the same relative fit, recalculate the layer size explicitly.
-Changing the field stop is not the same as zooming. There is no automatic
-resizing or conversion of existing materials/animation values.
+Field radius and reticle size remain independent: recalculate size explicitly
+when changing field radius. This is not zoom; existing values do not auto-resize.
 
 ## Exit pupil and zoom integration
 
@@ -164,20 +157,9 @@ With the default objective radius and M >= 1, the linked pupil radius is
 objective/cap settings can engage it. In Fixed mode this property is the
 actual radius, not merely a cap.
 
-Linked shadow shear is normalized by the independent shader constant
-`PupilShadowReferenceRadius = 0.01875`, not by the adjustable cap. Changing
-the cap can therefore limit pupil size without also redefining that reference.
-It still changes visibility through the pupil itself; this is not a promise
-that cap changes leave the shadow image unchanged. `_PupilFieldCoupling` and
-`_AxialVignette` remain the adjustable empirical shadow controls.
-
-The standard presets retain their appearance. For a pre-existing Linked
-material with a NONDEFAULT radius/cap R, preserve the old shear normalization
-by multiplying BOTH `_PupilFieldCoupling` and `_AxialVignette` by 0.01875/R,
-while retaining R as the cap. Inspector ranges may constrain extreme custom
-settings; compare before/after renders. Fixed mode needs no such conversion.
-The first-order pupil relation is described in
-[Nikon's optics guide](https://imaging.nikon.com/sport-optics/guide/binoculars/basic/basic_05/).
+Linked shadow shear uses independent constant `PupilShadowReferenceRadius=0.01875`.
+Changing the cap affects pupil visibility, not that normalization. Coupling and
+axial vignetting remain adjustable empirical controls.
 
 The linked mode reduces lateral eye tolerance while preserving the centred
 apparent field in this empirical model. It is not a full exit-pupil raytrace.
@@ -187,11 +169,10 @@ For any camera FOV: M = _TanHalfBaseFov / tan(FOV/2).
 Use radians in tan/atan, then convert to degrees for Camera.fieldOfView.
 Fixed pupil mode ignores M only for pupil sizing; FFP reticles still need M.
 
-You must provide your own script/animation/controller. No zoom clip is
-included. Unity material animations may use a renderer MaterialPropertyBlock;
-reading sharedMaterial alone does not show the animated property value.
-An existing application zoom control can drive both values without adding
-another synced parameter. Remote camera availability is platform-dependent.
+ShaderOnly supplies no zoom driver. WithExample includes an animation-driven
+rig and clips; see [avatar integration](AvatarIntegration.md). Renderer animations
+may use a MaterialPropertyBlock, so sharedMaterial need not show animated values.
+One zoom control can drive both FOV and magnification; remote cameras depend on platform safety.
 
 ## GPU-coordinate calibration and diagnostics
 
@@ -206,12 +187,6 @@ converts them to world lengths. `_EyeReliefMode` selects the units for BOTH
   object units as the lens centre. Forward-axis object-to-world scale converts
   them to world lengths. On a unit-scale MeshRenderer, 0.12 is 12 cm; at uniform
   scale 2 it becomes 24 cm, and the axial tolerance scales with it.
-
-For a new rigid-lens setup, use GPUObjectSpace (1) and calibrate the local
-distance. Earlier versions defaulted to WorldMetres (0). Before updating an
-older material that lacks a serialized `_EyeReliefMode`, explicitly save 0
-to preserve its calibration: absent values now inherit the new default 1.
-Existing materials with an explicitly saved 0 retain world-metre behaviour.
 
 For an existing uniformly scaled MeshRenderer, preserve the present world
 distance when switching to mode 1 by dividing BOTH distance and tolerance
@@ -229,9 +204,8 @@ coordinate space. Do not blindly use untransformed source vertices or apply
 baked scale twice. In mode 1, calibrate axial lengths in that resulting GPU
 space too. Only scale present in the renderer's object-to-world matrix is
 automatically applied; bone-baked/runtime skinning scale needs its own check.
-The scale-invariance tests cover a rigid MeshRenderer at uniform scales
-0.5, 1 and 2, not every VRChat skinning arrangement. Prefer a rigid lens and
-test your avatar at multiple sizes in the client.
+Scale checks cover a rigid MeshRenderer at 0.5/1/2, not every skinning setup.
+Prefer a rigid lens and test your avatar at multiple sizes.
 
 Hidden _ScopeDebug may be set by script/material debugging:
 - 1: transverse object scale as greyscale.
@@ -239,6 +213,15 @@ Hidden _ScopeDebug may be set by script/material debugging:
 - 3: field-stop coverage.
 - 4: moving-eye-shadow coverage.
 Restore 0 afterwards. View distance 2 helps detect wrong centre/unit settings.
+
+## Upgrade notes
+
+- Older shaders defaulted eye-relief mode to 0. Explicitly save 0 before updating
+  a material lacking `_EyeReliefMode` if preserving world-metre calibration.
+  Missing values now inherit 1; explicitly saved 0 is unchanged.
+- For older Linked materials with nondefault cap R, preserve prior shear by
+  multiplying BOTH coupling and axial vignetting by 0.01875/R, retaining R.
+  Fixed mode needs no conversion; inspector ranges may limit extreme settings.
 
 ## Limits and validation
 
@@ -248,16 +231,10 @@ integration, zoom-dependent eye relief or calibrated ballistic graduations.
 One square mono texture per scope is assumed. Use separate cameras/textures
 for simultaneous scopes to avoid image overwrites.
 
-The lens writes the normal camera Z buffer, but has no ShadowCaster pass.
-In Built-in Forward rendering with a separately generated depth texture,
-the lens can therefore be absent from `_CameraDepthTexture`. A local test
-recorded background depth (0.62m) instead of lens depth (0.12m); the same
-mesh with Unity's Standard shader recorded the lens correctly. Depth-based
-DOF or other post-effects may consequently treat the lens as background.
-This does not establish the behaviour of every VRChat photo camera or
-rendering path. See [Unity's depth texture documentation](https://docs.unity3d.com/2022.3/Documentation/Manual/SL-CameraDepthTexture.html).
-Adding a ShadowCaster pass also affects shadow rendering, so it is not
-included as an untested compatibility fix.
+The lens writes camera Z, but has no ShadowCaster pass. Built-in Forward
+separate `_CameraDepthTexture` generation can omit it: depth-based DOF may
+treat the lens as background. This was reproduced locally, not validated for
+every VRChat photo/render path. See [Unity's depth documentation](https://docs.unity3d.com/2022.3/Documentation/Manual/SL-CameraDepthTexture.html).
 
 The example RenderTexture uses a lightweight LDR, non-MSAA configuration.
 MSAA and HDR can improve particular scenes but increase memory/render cost;
