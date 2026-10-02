@@ -116,6 +116,41 @@ independent of camera overscan. Do not change reticle calibration merely to
 crop the scene camera. Supplied images are not automatically split, and
 the shader does not calibrate arbitrary graduations in MOA/MRAD.
 
+### Calculate size relative to the field stop
+
+With zero offset, for an SFP layer (or an FFP layer at its reference
+magnification), the centre-to-edge angular tangent along the horizontal or
+vertical texture axis is `_ReticleTanHalfFov * _ReticleScale`. To align those
+texture edges with the circular field boundary:
+
+```text
+_ReticleScale = _FieldTanHalfAngle / _ReticleTanHalfFov
+              = 0.16 / 0.5773503 ~= 0.277128
+```
+
+The existing preset 0.278 is retained; its texture-edge radius is about
+1.00315 times the field radius. The small difference is not necessarily less
+than one pixel at every resolution. A square's corners still lie outside a
+circle: this formula aligns the cardinal edges, not all four corners.
+
+To fill a fraction q of the field radius, use `q * field / calibration`.
+For FFP at a different magnification M, multiply the resulting size by
+`_ReticleRefMagnification / M` to obtain that fraction specifically at M.
+The illumination layer follows the same equations with `_IlluminationScale`.
+
+These formulas concern the texture boundary, not the drawn marks. Transparent
+margins, nonzero offsets and the physical lens/housing boundary change the
+visible fit. If a mark's outer extent is a fraction a of the centre-to-texture
+edge distance, divide the calculated size by a to fit that mark instead.
+The example etched cross has margins; fitting its texture does not make every
+ink endpoint touch the field stop.
+
+Field radius and reticle calibration remain independent properties, with
+their existing serialized names and meanings. If you change the field radius
+and want to keep the same relative fit, recalculate the layer size explicitly.
+Changing the field stop is not the same as zooming. There is no automatic
+resizing or conversion of existing materials/animation values.
+
 ## Exit pupil and zoom integration
 
 _ExitPupilMode=1 (MagnificationLinked) is the new-material default:
@@ -206,6 +241,21 @@ refraction. It does not model aberrations, brightness loss, human-pupil
 integration, zoom-dependent eye relief or calibrated ballistic graduations.
 One square mono texture per scope is assumed. Use separate cameras/textures
 for simultaneous scopes to avoid image overwrites.
+
+The lens writes the normal camera Z buffer, but has no ShadowCaster pass.
+In Built-in Forward rendering with a separately generated depth texture,
+the lens can therefore be absent from `_CameraDepthTexture`. A local test
+recorded background depth (0.62m) instead of lens depth (0.12m); the same
+mesh with Unity's Standard shader recorded the lens correctly. Depth-based
+DOF or other post-effects may consequently treat the lens as background.
+This does not establish the behaviour of every VRChat photo camera or
+rendering path. See [Unity's depth texture documentation](https://docs.unity3d.com/2022.3/Documentation/Manual/SL-CameraDepthTexture.html).
+Adding a ShadowCaster pass also affects shadow rendering, so it is not
+included as an untested compatibility fix.
+
+The example RenderTexture uses a lightweight LDR, non-MSAA configuration.
+MSAA and HDR can improve particular scenes but increase memory/render cost;
+choose them for your target hardware rather than assuming they are free.
 
 The shader has editor compilation and render regression coverage. This is
 not a claim of validation on every headset, rig, Unity version or graphics API.
