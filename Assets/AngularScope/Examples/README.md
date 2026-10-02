@@ -57,6 +57,12 @@ showControls and/or remove the controller from noninteractive instances.
 
 ## VRChat integration
 
+PC VRChat avatars can use this shader; it is not restricted to worlds.
+See [the avatar integration guide](../Documentation/AvatarIntegration.md) for
+an animation-driven prefab, endpoint clips, a parameter-controlled zoom sweep,
+FX binding paths and expression-menu setup. These fixtures are Unity-tested,
+not a complete upload-ready avatar installer.
+
 The example is a normal Unity demo, NOT a ready-to-upload VRChat avatar or
 Udon world. Arbitrary MonoBehaviours do not become avatar runtime scripts.
 Remove ScopeExampleController from an avatar integration and drive camera FOV

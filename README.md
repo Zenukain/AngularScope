@@ -14,7 +14,7 @@ Built for Unity's **Built-in Render Pipeline on PC**. The example was tested in 
 
 For the shader and documentation only, download [the smaller shader-only package](dist/AngularScope_ShaderOnly.unitypackage).
 
-The shader **requires a scene-image RenderTexture**. A separate camera creates the magnified image; the shader does not replace that camera. The example controller is a regular Unity MonoBehaviour, **not an upload-ready VRChat avatar script**. For avatars, supply supported camera-FOV/material animations or your own integration.
+The shader **requires a scene-image RenderTexture**. A separate camera creates the magnified image; the shader does not replace that camera. **PC VRChat avatars can use it, not just worlds.** The scripted demo is not an upload-ready avatar installer: replace its Unity MonoBehaviour with avatar FX animations. The example package includes an animation-driven rig, 1x/6x clips and a continuous zoom curve; follow the [PC avatar integration guide](Assets/AngularScope/Documentation/AvatarIntegration.md).
 
 ## Magnification and focal plane
 
@@ -62,6 +62,7 @@ The scope housing, mount, checkerboard range, meshes and reticle textures are ge
 
 - [Shader setup and parameter guide](Assets/AngularScope/Documentation/README.md)
 - [Example controls and regeneration](Assets/AngularScope/Examples/README.md)
+- [PC VRChat avatar integration and animation fixtures](Assets/AngularScope/Documentation/AvatarIntegration.md)
 
 No lens distortion or chromatic aberration is implemented. Quest avatar custom shaders, URP and HDRP are not supported by this package. A single mono scene texture cannot reproduce exact near-field binocular parallax.
 

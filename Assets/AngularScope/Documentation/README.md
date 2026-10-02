@@ -6,8 +6,10 @@ Tested editor: Unity 2022.3.22f1, PC rendering.
 
 ## Package and license
 
-Includes shader source, this guide and CC0 license files only. No model,
-texture, reticle, camera, RenderTexture, animation or controller is supplied.
+The ShaderOnly package includes shader source, documentation and CC0 license
+files, with no model, texture, camera or animation assets. The WithExample
+package additionally includes procedural fixtures and animation-driven zoom.
+See [PC avatar integration](AvatarIntegration.md) for the integration workflow.
 No proprietary scope package, Modular Avatar or lilToon is needed by the
 shader itself. Your scene-source camera and avatar integration are separate.
 
