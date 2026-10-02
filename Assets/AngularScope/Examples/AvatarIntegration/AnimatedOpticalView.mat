@@ -44,6 +44,7 @@ Material:
     - _ExitPupilRadius: 0.01875
     - _EyeBoxLimit: 0.873
     - _EyeReliefDist: 0.12
+    - _EyeReliefMode: 0
     - _EyeReliefTol: 0.01
     - _FieldTanHalfAngle: 0.16
     - _IlluminationEmission: 1

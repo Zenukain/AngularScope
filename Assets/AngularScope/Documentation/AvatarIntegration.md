@@ -53,6 +53,12 @@ Duplicate the material and RT for each independently active scope. Without the
 demo script there is no automatic per-instance resource cloning. Sharing one RT
 between active cameras can make one scope show another scope's view.
 
+The supplied rigid-lens material uses `_EyeReliefMode = 1` (GPUObjectSpace),
+so distance and axial tolerance follow uniform object scaling together with
+the scope. The shader default remains 0 (WorldMetres) for existing materials.
+See the main shader guide before switching units on a scaled or skinned rig.
+Do not mark the optical lens Static; dynamic batching is disabled by the shader.
+
 ## 2. Test without modifying an avatar
 
 1. In a disposable copy of the demo scene, remove its original scope instance.

@@ -38,6 +38,7 @@ namespace AngularScope.Examples.Editor
                 material.SetTexture("_MainTex", texture);
                 material.SetFloat("_Magnification", 1);
                 material.SetFloat("_TanHalfBaseFov", BaseTangent);
+                material.SetFloat("_EyeReliefMode", 1);
                 lens.sharedMaterial = Save(material, Root + "/AnimatedOpticalView.mat");
                 camera.targetTexture = texture;
                 camera.fieldOfView = Fov(1);

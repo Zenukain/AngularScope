@@ -145,14 +145,35 @@ another synced parameter. Remote camera availability is platform-dependent.
 
 For a normal MeshRenderer, _LensCenter is in native local mesh coordinates.
 Pupil/objective radii use those units; the object's transverse world scale
-converts them to world lengths. _EyeReliefDist/_EyeReliefTol are world metres.
+converts them to world lengths. `_EyeReliefMode` selects the units for BOTH
+`_EyeReliefDist` and `_EyeReliefTol`:
+
+- **WorldMetres (0, shader default):** preserves existing materials. A value
+  of 0.12 stays 12 cm regardless of object scale.
+- **GPUObjectSpace (1, procedural example preset):** lengths use the same GPU
+  object units as the lens centre. Forward-axis object-to-world scale converts
+  them to world lengths. On a unit-scale MeshRenderer, 0.12 is 12 cm; at uniform
+  scale 2 it becomes 24 cm, and the axial tolerance scales with it.
+
+For an existing uniformly scaled MeshRenderer, preserve the present world
+distance when switching to mode 1 by dividing BOTH distance and tolerance
+by its current forward-axis world scale. Do not simply switch units on a
+non-unit-scale model without recalibrating. Axes should be unit-length and
+orthogonal; nonuniform scale/shear is not a generally supported optical rig.
+
+Dynamic batching is disabled because the shader depends on each lens's object
+coordinate frame. Do not mark the optical lens Static for static batching.
+This tag is not a blanket prohibition on every Unity batching/instancing path.
 
 For skinned renderers, GPU vertex coordinates may already contain bone
 transforms and scale. Lens centre and radii must use THAT same resulting
 coordinate space. Do not blindly use untransformed source vertices or apply
-baked scale twice. Verify the actual renderer path; GPU skinning arrangements
-can differ. Runtime avatar rescaling, nonuniform scales and deforming lens
-rigs require additional validation.
+baked scale twice. In mode 1, calibrate axial lengths in that resulting GPU
+space too. Only scale present in the renderer's object-to-world matrix is
+automatically applied; bone-baked/runtime skinning scale needs its own check.
+The scale-invariance tests cover a rigid MeshRenderer at uniform scales
+0.5, 1 and 2, not every VRChat skinning arrangement. Prefer a rigid lens and
+test your avatar at multiple sizes in the client.
 
 Hidden _ScopeDebug may be set by script/material debugging:
 - 1: transverse object scale as greyscale.

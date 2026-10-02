@@ -37,7 +37,8 @@ Shader "AngularScope/Optical View"
         _FieldTanHalfAngle ("Optical Field Radius (tan half angle)", Range(0.05,0.5)) = 0.16
         _OpticalShadowSoftness ("Moving Shadow Edge Softness", Range(0.01,0.4)) = 0.12
         _PupilFieldCoupling ("Moving Shadow Field Coupling", Range(0.05,1)) = 0.25
-        _EyeReliefDist ("Eye Relief (World Metres)", Range(0,0.5)) = 0.12
+        [Enum(WorldMetres,0,GPUObjectSpace,1)] _EyeReliefMode ("Eye Relief Units", Float) = 0
+        _EyeReliefDist ("Eye Relief (Selected Units)", Range(0,0.5)) = 0.12
         _EyeReliefTol ("Axial Vignetting Dead Zone", Range(0,0.2)) = 0.01
         _Darkness ("Outside View Brightness", Range(0,1)) = 0
         // Legacy serialized visibility adapter, retained for old animations.
@@ -47,7 +48,7 @@ Shader "AngularScope/Optical View"
     }
     SubShader
     {
-        Tags { "RenderType"="Opaque" "Queue"="Geometry" "ForceNoShadowCasting"="True" }
+        Tags { "RenderType"="Opaque" "Queue"="Geometry" "ForceNoShadowCasting"="True" "DisableBatching"="True" }
         Cull Back
         ZWrite On
         Pass
@@ -84,7 +85,7 @@ Shader "AngularScope/Optical View"
             float _ExitPupilMode, _Magnification, _ObjectiveRadius;
             float _FieldTanHalfAngle, _OpticalShadowSoftness, _PupilFieldCoupling;
             float _EmissionPower, _ReticleScale, _TanHalfBaseFov, _ReticleTanHalfFov;
-            float _EyeReliefDist, _EyeReliefTol, _Darkness;
+            float _EyeReliefMode, _EyeReliefDist, _EyeReliefTol, _Darkness;
             float _ScopeDebug;
             float _EyeBoxLimit;
 
@@ -94,6 +95,7 @@ Shader "AngularScope/Optical View"
                 float3 up;
                 float3 forward;
                 float radialScale;
+                float axialScale;
             };
 
             ScopeFrame GetScopeFrame()
@@ -103,8 +105,10 @@ Shader "AngularScope/Optical View"
                 float3 rawUp=mul((float3x3)unity_ObjectToWorld,_AxisUp.xyz);
                 frame.right=normalize(rawRight);
                 frame.up=normalize(rawUp);
-                frame.forward=normalize(mul((float3x3)unity_ObjectToWorld,_AxisForward.xyz));
+                float3 rawForward=mul((float3x3)unity_ObjectToWorld,_AxisForward.xyz);
+                frame.forward=normalize(rawForward);
                 frame.radialScale=0.5*(length(rawRight)+length(rawUp));
+                frame.axialScale=max(length(rawForward),0.000001);
                 return frame;
             }
 
@@ -152,11 +156,16 @@ Shader "AngularScope/Optical View"
             }
 
             float EyeShadowCoverage(float2 lensXY, float2 eyeOffset,
-                                    float lensDepth, float radialScale)
+                                    float lensDepth, float radialScale, float axialScale)
             {
                 // Empirical eye-shadow model, not a physical exit-pupil raytrace.
                 // Closer eye positions do not contract the soft shadow.
-                float farError=max(0,lensDepth-_EyeReliefDist-_EyeReliefTol);
+                // Mode 0 preserves existing world-metre materials/animations.
+                // Mode 1 converts BOTH distance and tolerance from GPU object
+                // units using the forward-axis scale. Do not reapply skinning
+                // scale already baked into GPU vertices/calibration values.
+                float reliefScale=_EyeReliefMode>=0.5 ? axialScale : 1;
+                float farError=max(0,lensDepth-_EyeReliefDist*reliefScale-_EyeReliefTol*reliefScale);
                 float coupling=_PupilFieldCoupling
                     +farError/max(lensDepth,0.00001)*_AxialVignette;
                 float pupilRadius=ExitPupilRadius();
@@ -258,7 +267,7 @@ Shader "AngularScope/Optical View"
                 float2 lensXY=ProjectToLensPlane(ray,i.lensRay,axial,lensDepth,frame);
                 float2 eyeOffset=-TransverseCoordinates(i.lensRay,frame);
                 // The lens mesh and housing supply the physical boundary.
-                float pupilMask=EyeShadowCoverage(lensXY,eyeOffset,lensDepth,frame.radialScale);
+                float pupilMask=EyeShadowCoverage(lensXY,eyeOffset,lensDepth,frame.radialScale,frame.axialScale);
                 float fieldMask=OpticalFieldCoverage(slope);
                 if(_ScopeDebug>2.5 && _ScopeDebug<3.5) return float4(fieldMask.xxx,1);
                 if(_ScopeDebug>3.5) return float4(pupilMask.xxx,1);
