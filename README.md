@@ -1,5 +1,7 @@
 # AngularScope
 
+> **AI disclaimer:** Generative AI was used to develop the code and documentation, with human review and iterative testing in Unity and VR. This is an experimental optical approximation, not a physically accurate simulation or a guarantee of compatibility with every project. Review and test it in your own setup before use.
+
 A configurable optical-view shader and a standalone Unity example for scope creators. Includes variable magnification, SFP/FFP reticles, two independent reticle layers, a sharp field stop, and a moving soft eye-box shadow.
 
 Built for Unity's **Built-in Render Pipeline on PC**. The example was tested in Unity 2022.3.22f1. This is a geometric approximation, not a physical ray-traced optical system.
@@ -37,11 +39,18 @@ Only `_ReticleRefMagnification` is changed to `1` in the captures below; the ret
 
 The black etched cross and red illuminated centre are independent texture layers.
 
-## Eye-box shadow
+## Field stop and eye-box shadow
 
-Moving the eye off axis produces a soft shadow. Exit-pupil size can follow magnification or remain fixed for a more forgiving view.
+Two independent masks shape the view:
 
-![Off-axis eye-box shadow](docs/images/eye-box-shadow.png)
+- **Sharp field stop:** a crisp circular boundary limits the apparent angular field. Moving the eye closer makes this boundary visible inside the housing; it is not another physical lens rim.
+- **Soft eye-box shadow:** moving the eye sideways or vertically causes a soft shadow to sweep across the view. Moving too far behind the intended eye relief can also narrow the usable view.
+
+| Sharp field stop | Soft eye-box shadow |
+|---|---|
+| ![Sharp circular field stop with the eye on axis and closer to the lens](docs/images/field-stop.png) | ![Soft eye-box shadow with the eye shifted sideways and upward](docs/images/eye-box-shadow.png) |
+
+Both are actual 1x captures with the same material settings: the left camera is on axis, 9 cm behind the rear lens; the right camera is 12 cm behind it and offset by 7 mm horizontally and vertically. Both masks remain enabled in both images. The housing supplies the physical lens boundary. Exit-pupil size can follow magnification or remain fixed for a more forgiving view; this setting controls the soft shadow, not the sharp field stop.
 
 ## Included example
 
