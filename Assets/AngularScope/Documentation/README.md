@@ -105,9 +105,7 @@ for a 10x size reference, set it to 10. A mark at 1x then has one-tenth its
 reference apparent size. Both layers may use different focal-plane selections.
 
 The illumination overlay is not restricted to a dot: rings, horseshoes and
-other illuminated patterns work too. For pre-release materials or animations
-using the old `_Reticle2` prefix, rename those property keys/bindings to
-`_Illumination` when upgrading; existing values do not migrate automatically.
+other illuminated patterns work too.
 For consistent geometry, size-reference calibration must be deliberate.
 At low zoom, thin FFP marks can become subpixel and lose visibility; choose
 appropriate line widths, texture filtering and mipmaps for your target image.
@@ -181,7 +179,7 @@ Pupil/objective radii use those units; the object's transverse world scale
 converts them to world lengths. `_EyeReliefMode` selects the units for BOTH
 `_EyeReliefDist` and `_EyeReliefTol`:
 
-- **WorldMetres (0, compatibility mode):** preserves world-metre calibration. A value
+- **WorldMetres (0):** uses fixed distances independent of object scale. A value
   of 0.12 stays 12 cm regardless of object scale.
 - **GPUObjectSpace (1, shader default and both supplied example presets):** lengths use the same GPU
   object units as the lens centre. Forward-axis object-to-world scale converts
@@ -219,9 +217,6 @@ Restore 0 afterwards. View distance 2 helps detect wrong centre/unit settings.
 - Older shaders defaulted eye-relief mode to 0. Explicitly save 0 before updating
   a material lacking `_EyeReliefMode` if preserving world-metre calibration.
   Missing values now inherit 1; explicitly saved 0 is unchanged.
-- For older Linked materials with nondefault cap R, preserve prior shear by
-  multiplying BOTH coupling and axial vignetting by 0.01875/R, retaining R.
-  Fixed mode needs no conversion; inspector ranges may limit extreme settings.
 
 ## Limits and validation
 

@@ -146,8 +146,8 @@ Shader "AngularScope/Optical View"
             {
                 float maximumRadius=max(_ExitPupilRadius,0.000001);
                 if(_ExitPupilMode<0.5) return maximumRadius;
-                // First-order aperture/magnification relation, capped by an
-                // effective internal stop at low zoom. Not a lens raytrace.
+                // First-order aperture/magnification relation with an optional
+                // cap. The default cap does not engage at M >= 1. Not a raytrace.
                 return min(maximumRadius,
                            max(_ObjectiveRadius,0.000001)/max(_Magnification,1));
             }
@@ -162,7 +162,7 @@ Shader "AngularScope/Optical View"
             {
                 // Empirical eye-shadow model, not a physical exit-pupil raytrace.
                 // Closer eye positions do not contract the soft shadow.
-                // Mode 0 preserves existing world-metre materials/animations.
+                // Mode 0 uses fixed world distances, independent of object scale.
                 // Mode 1 converts BOTH distance and tolerance from GPU object
                 // units using the forward-axis scale. Do not reapply skinning
                 // scale already baked into GPU vertices/calibration values.

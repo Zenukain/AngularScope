@@ -17,8 +17,7 @@ Import the **WithExample** package. Under `Examples/AvatarIntegration` you get:
 
 These fixtures have been checked in Unity, **not uploaded and headset-tested as
 a new VRChat avatar integration**. Test your final avatar locally, in mirrors,
-and with a second PC user. The earlier personal integration is not proof that
-every avatar, SDK configuration or remote-client setup will work.
+and with a second PC user.
 
 ## 1. Understand the hierarchy
 
