@@ -202,10 +202,14 @@ converts them to world lengths. `_EyeReliefMode` selects the units for BOTH
 
 - **WorldMetres (0, shader default):** preserves existing materials. A value
   of 0.12 stays 12 cm regardless of object scale.
-- **GPUObjectSpace (1, procedural example preset):** lengths use the same GPU
+- **GPUObjectSpace (1, both supplied example presets):** lengths use the same GPU
   object units as the lens centre. Forward-axis object-to-world scale converts
   them to world lengths. On a unit-scale MeshRenderer, 0.12 is 12 cm; at uniform
   scale 2 it becomes 24 cm, and the axial tolerance scales with it.
+
+For a new rigid-lens setup, explicitly choose GPUObjectSpace (1) and calibrate
+the local distance. The shader default remains WorldMetres (0) so importing
+an update does not reinterpret existing materials that lack this property.
 
 For an existing uniformly scaled MeshRenderer, preserve the present world
 distance when switching to mode 1 by dividing BOTH distance and tolerance

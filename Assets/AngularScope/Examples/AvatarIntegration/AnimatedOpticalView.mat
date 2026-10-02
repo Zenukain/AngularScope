@@ -42,7 +42,6 @@ Material:
     - _EmissionPower: 1.11
     - _ExitPupilMode: 1
     - _ExitPupilRadius: 0.01875
-    - _EyeBoxLimit: 0.873
     - _EyeReliefDist: 0.12
     - _EyeReliefMode: 1
     - _EyeReliefTol: 0.01

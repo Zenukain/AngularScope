@@ -41,9 +41,6 @@ Shader "AngularScope/Optical View"
         _EyeReliefDist ("Eye Relief (Selected Units)", Range(0,0.5)) = 0.12
         _EyeReliefTol ("Axial Vignetting Dead Zone", Range(0,0.2)) = 0.01
         _Darkness ("Outside View Brightness", Range(0,1)) = 0
-        // Legacy serialized visibility adapter, retained for old animations.
-        // Neutral by default; not part of the optical calibration controls.
-        [HideInInspector] _EyeBoxLimit ("Front Cover Animation Input", Float) = 0.873
         [HideInInspector] _ScopeDebug ("Scope Diagnostic Mode", Float) = 0
     }
     SubShader
@@ -87,7 +84,6 @@ Shader "AngularScope/Optical View"
             float _EmissionPower, _ReticleScale, _TanHalfBaseFov, _ReticleTanHalfFov;
             float _EyeReliefMode, _EyeReliefDist, _EyeReliefTol, _Darkness;
             float _ScopeDebug;
-            float _EyeBoxLimit;
 
             struct ScopeFrame
             {
@@ -277,8 +273,6 @@ Shader "AngularScope/Optical View"
                 if(_ScopeDebug>2.5 && _ScopeDebug<3.5) return float4(fieldMask.xxx,1);
                 if(_ScopeDebug>3.5) return float4(pupilMask.xxx,1);
                 float visibility=pupilMask*fieldMask*inside*step(0.00001,lensDepth);
-                // 0.127 = 1 - 0.873, the original cover's open-to-closed range.
-                visibility*=saturate((1-_EyeBoxLimit)/0.127);
 
                 // 3. Composition does not affect angular zero or magnification.
                 fixed3 image=ComposeViewAndReticle(uv,slope);
