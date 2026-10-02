@@ -155,6 +155,11 @@ Shader "AngularScope/Optical View"
                            max(_ObjectiveRadius,0.000001)/max(_Magnification,1));
             }
 
+            // Empirical shear normalization, independent of the adjustable
+            // fixed radius / linked radius cap. Preserve the established
+            // default look; this is not a measured physical pupil radius.
+            static const float PupilShadowReferenceRadius=0.01875;
+
             float EyeShadowCoverage(float2 lensXY, float2 eyeOffset,
                                     float lensDepth, float radialScale, float axialScale)
             {
@@ -173,7 +178,7 @@ Shader "AngularScope/Optical View"
                 // Scaling the empirical field shear along with pupil radius
                 // preserves its normalized centred-eye coverage at each zoom.
                 if(_ExitPupilMode>=0.5)
-                    coupling*=pupilRadius/max(_ExitPupilRadius,0.000001);
+                    coupling*=pupilRadius/PupilShadowReferenceRadius;
                 float2 pupilXY=eyeOffset+lensXY*coupling;
                 float radius=length(pupilXY)/max(pupilRadius*radialScale,0.000001);
                 return CircleCoverage(radius,_OpticalShadowSoftness);

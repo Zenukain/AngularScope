@@ -124,6 +124,23 @@ _ExitPupilMode=0 (Fixed) preserves _ExitPupilRadius at every zoom.
 _ObjectiveRadius is an EFFECTIVE radius, not diameter; default 0.012 is an
 illustrative 24mm diameter at metric unit scale. The default radius cap
 0.01875 is an adjustable empirical value, not a measured human pupil.
+With the default objective radius and M >= 1, the linked pupil radius is
+0.012/M, always below that cap: the default cap does not engage. Other
+objective/cap settings can engage it. In Fixed mode this property is the
+actual radius, not merely a cap.
+
+Linked shadow shear is normalized by the independent shader constant
+`PupilShadowReferenceRadius = 0.01875`, not by the adjustable cap. Changing
+the cap can therefore limit pupil size without also redefining that reference.
+It still changes visibility through the pupil itself; this is not a promise
+that cap changes leave the shadow image unchanged. `_PupilFieldCoupling` and
+`_AxialVignette` remain the adjustable empirical shadow controls.
+
+The standard presets retain their appearance. For a pre-existing Linked
+material with a NONDEFAULT radius/cap R, preserve the old shear normalization
+by multiplying BOTH `_PupilFieldCoupling` and `_AxialVignette` by 0.01875/R,
+while retaining R as the cap. Inspector ranges may constrain extreme custom
+settings; compare before/after renders. Fixed mode needs no such conversion.
 The first-order pupil relation is described in
 [Nikon's optics guide](https://imaging.nikon.com/sport-optics/guide/binoculars/basic/basic_05/).
 
