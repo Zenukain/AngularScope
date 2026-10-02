@@ -200,16 +200,18 @@ Pupil/objective radii use those units; the object's transverse world scale
 converts them to world lengths. `_EyeReliefMode` selects the units for BOTH
 `_EyeReliefDist` and `_EyeReliefTol`:
 
-- **WorldMetres (0, shader default):** preserves existing materials. A value
+- **WorldMetres (0, compatibility mode):** preserves world-metre calibration. A value
   of 0.12 stays 12 cm regardless of object scale.
-- **GPUObjectSpace (1, both supplied example presets):** lengths use the same GPU
+- **GPUObjectSpace (1, shader default and both supplied example presets):** lengths use the same GPU
   object units as the lens centre. Forward-axis object-to-world scale converts
   them to world lengths. On a unit-scale MeshRenderer, 0.12 is 12 cm; at uniform
   scale 2 it becomes 24 cm, and the axial tolerance scales with it.
 
-For a new rigid-lens setup, explicitly choose GPUObjectSpace (1) and calibrate
-the local distance. The shader default remains WorldMetres (0) so importing
-an update does not reinterpret existing materials that lack this property.
+For a new rigid-lens setup, use GPUObjectSpace (1) and calibrate the local
+distance. Earlier versions defaulted to WorldMetres (0). Before updating an
+older material that lacks a serialized `_EyeReliefMode`, explicitly save 0
+to preserve its calibration: absent values now inherit the new default 1.
+Existing materials with an explicitly saved 0 retain world-metre behaviour.
 
 For an existing uniformly scaled MeshRenderer, preserve the present world
 distance when switching to mode 1 by dividing BOTH distance and tolerance

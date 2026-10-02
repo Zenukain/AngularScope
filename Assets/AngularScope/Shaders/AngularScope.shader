@@ -37,7 +37,7 @@ Shader "AngularScope/Optical View"
         _FieldTanHalfAngle ("Optical Field Radius (tan half angle)", Range(0.05,0.5)) = 0.16
         _OpticalShadowSoftness ("Moving Shadow Edge Softness", Range(0.01,0.4)) = 0.12
         _PupilFieldCoupling ("Moving Shadow Field Coupling", Range(0.05,1)) = 0.25
-        [Enum(WorldMetres,0,GPUObjectSpace,1)] _EyeReliefMode ("Eye Relief Units", Float) = 0
+        [Enum(WorldMetres,0,GPUObjectSpace,1)] _EyeReliefMode ("Eye Relief Units", Float) = 1
         _EyeReliefDist ("Eye Relief (Selected Units)", Range(0,0.5)) = 0.12
         _EyeReliefTol ("Axial Vignetting Dead Zone", Range(0,0.2)) = 0.01
         _Darkness ("Outside View Brightness", Range(0,1)) = 0
