@@ -32,8 +32,10 @@ Avatar root (existing FX Animator is the animation root)
 
 The camera faces the same direction as the scope (+Z in this example). Its
 rendered image goes to a **square RenderTexture**, not to the user's main view.
-The rear lens is a rigid MeshRenderer facing the eye; keep it rigid rather than
-deforming it across multiple bones. This is a separate scene-source camera,
+The rear lens must use a rigid MeshRenderer facing the eye, optionally parented
+to one weapon bone. SkinnedMeshRenderer optical displays are unsupported, even
+when weighted to one bone. The rest of the model may remain skinned.
+This is a separate scene-source camera,
 not the VRChat player camera.
 
 The example camera sits 29 cm forward of the rear lens. This avoids rendering
@@ -52,10 +54,10 @@ Duplicate the material and RT for each independently active scope. Without the
 demo script there is no automatic per-instance resource cloning. Sharing one RT
 between active cameras can make one scope show another scope's view.
 
-The supplied rigid-lens material uses `_EyeReliefMode = 1` (GPUObjectSpace),
+The supplied rigid-lens material uses `_EyeReliefMode = 1` (LocalSpace),
 so distance and axial tolerance follow uniform object scaling together with
 the scope. New materials also default to this mode; WorldMetres (0) remains available.
-See the main shader guide before switching units on a scaled or skinned rig.
+See the main shader guide before switching units on a scaled rig.
 Do not mark the optical lens Static; dynamic batching is disabled by the shader.
 
 ## 2. Test without modifying an avatar
@@ -112,8 +114,8 @@ the clips and prefix both bindings with your actual attachment path. For
 example `Armature/.../Hand/AngularScope Animated Rig/Scene Source Camera`.
 Record the two properties on your actual hierarchy in Unity's Animation window
 if uncertain; compare the recorded paths with these examples. Renaming or
-reparenting objects requires rebinding. A SkinnedMeshRenderer also requires
-changing the binding component type; the supplied clips target MeshRenderer.
+reparenting objects requires rebinding. All optical display bindings must target
+MeshRenderer, including lenses converted from a skinned model.
 
 **Do not replace your entire FX controller with ScopeZoom.controller.** Copy its
 single state/layer into your existing FX, or use an animation-merging tool that
@@ -171,3 +173,4 @@ demo scene. Duplicate generated assets before personal edits.
 
 The Unity fixtures have interpolation/binding checks, not VRChat upload or
 safety validation. Test the final avatar in the client.
+

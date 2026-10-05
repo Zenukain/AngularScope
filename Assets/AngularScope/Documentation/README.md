@@ -6,8 +6,9 @@ Tested editor: Unity 2022.3.22f1, PC rendering.
 
 ## Package and license
 
-The ShaderOnly package includes shader source, documentation and CC0 license
-files, with no model, texture, camera or animation assets. The WithExample
+The ShaderOnly package includes shader source, an optional editor-only rigid-lens
+conversion tool, documentation and CC0 license files, with no model, texture,
+camera or animation assets. The WithExample
 package additionally includes procedural fixtures and animation-driven zoom.
 See [PC avatar integration](AvatarIntegration.md) for the integration workflow.
 No proprietary scope package, Modular Avatar or lilToon is needed by the
@@ -24,10 +25,11 @@ integration target. This is NOT a Quest/Android avatar shader. URP/HDRP
 compatibility has not been established. Stereo macros are present, but one
 mono camera texture cannot reproduce exact near-field binocular parallax.
 
-Recommended starting point: a normal MeshRenderer on a rigid lens mesh,
-parented to one bone/transform. A SkinnedMeshRenderer is possible with
-GPU-coordinate calibration, but arbitrary deforming lens skinning is not
-supported as a general optical model. Prefer uniform positive object scale.
+Required display structure: a normal MeshRenderer on a rigid lens mesh,
+parented to one bone/transform. SkinnedMeshRenderer optical displays are not
+supported: skinning can bake scaling into vertices while the shader sees a
+unit-scale matrix, breaking lens-centre and distance calibration on rescaling.
+The housing and moving covers may still use skinned meshes. Prefer uniform positive object scale.
 Axes must be nonzero, mutually perpendicular, and aligned with the image camera.
 
 ## Quick start
@@ -51,7 +53,7 @@ The shader-only package does not include these example assets or scripts.
 4. Default optical axes are local right +X, up +Y, forward +Z. The observer
    looks from behind the lens along +Z. _LensCenter defaults to (0,0,0):
    put the rear-lens centre at that origin or enter its actual coordinates.
-5. Calibrate lens centre, eye relief and pupil radii in GPU object coordinates.
+5. Calibrate lens centre, eye relief and pupil radii in the lens's local coordinates.
    Default mode 1 uses local lengths: _EyeReliefDist=0.12 is 12cm only at metric
    unit scale. Defaults are starting points, not measured lens specifications.
 6. For 1x, set Camera.fieldOfView=19.296091 degrees and _Magnification=1.
@@ -172,7 +174,7 @@ rig and clips; see [avatar integration](AvatarIntegration.md). Renderer animatio
 may use a MaterialPropertyBlock, so sharedMaterial need not show animated values.
 One zoom control can drive both FOV and magnification; remote cameras depend on platform safety.
 
-## GPU-coordinate calibration and diagnostics
+## Local-coordinate calibration and diagnostics
 
 For a normal MeshRenderer, _LensCenter is in native local mesh coordinates.
 Pupil/objective radii use those units; the object's transverse world scale
@@ -181,7 +183,7 @@ converts them to world lengths. `_EyeReliefMode` selects the units for BOTH
 
 - **WorldMetres (0):** uses fixed distances independent of object scale. A value
   of 0.12 stays 12 cm regardless of object scale.
-- **GPUObjectSpace (1, shader default and both supplied example presets):** lengths use the same GPU
+- **LocalSpace (1, shader default and both supplied example presets):** lengths use the same local
   object units as the lens centre. Forward-axis object-to-world scale converts
   them to world lengths. On a unit-scale MeshRenderer, 0.12 is 12 cm; at uniform
   scale 2 it becomes 24 cm, and the axial tolerance scales with it.
@@ -196,14 +198,20 @@ Dynamic batching is disabled because the shader depends on each lens's object
 coordinate frame. Do not mark the optical lens Static for static batching.
 This tag is not a blanket prohibition on every Unity batching/instancing path.
 
-For skinned renderers, GPU vertex coordinates may already contain bone
-transforms and scale. Lens centre and radii must use THAT same resulting
-coordinate space. Do not blindly use untransformed source vertices or apply
-baked scale twice. In mode 1, calibrate axial lengths in that resulting GPU
-space too. Only scale present in the renderer's object-to-world matrix is
-automatically applied; bone-baked/runtime skinning scale needs its own check.
-Scale checks cover a rigid MeshRenderer at 0.5/1/2, not every skinning setup.
-Prefer a rigid lens and test your avatar at multiple sizes.
+Do not calibrate around skinned-renderer GPU behaviour. Use a dedicated rigid
+MeshRenderer and test the avatar at multiple sizes after uploading. The optional
+editor tool under LensTools converts an optical submesh rigidly weighted to one
+bone: select its SkinnedMeshRenderer object, then use Tools > AngularScope >
+Convert Selected Rigid Skinned Lens. Choose a generated-assets folder inside Assets.
+The imported model is not changed; the housing gets a mesh copy without optical
+triangles, and a new MeshRenderer is attached to the lens bone. Blendshapes that
+deform the lens and mixed-bone weighting are rejected rather than silently lost.
+Rebind optical animations to the new renderer/path and update any setup component.
+If animations toggle the old renderer or its object separately from the attachment
+bone, also wire those visibility controls to the new lens. The converter preserves
+the current enabled/active flags, not arbitrary future animation logic.
+Check the generated rear-plane centre, axes and physical distances; values from
+an unsupported skinned setup are not guaranteed to preserve its apparent tuning.
 
 Hidden _ScopeDebug may be set by script/material debugging:
 - 1: transverse object scale as greyscale.
@@ -211,12 +219,6 @@ Hidden _ScopeDebug may be set by script/material debugging:
 - 3: field-stop coverage.
 - 4: moving-eye-shadow coverage.
 Restore 0 afterwards. View distance 2 helps detect wrong centre/unit settings.
-
-## Upgrade notes
-
-- Older shaders defaulted eye-relief mode to 0. Explicitly save 0 before updating
-  a material lacking `_EyeReliefMode` if preserving world-metre calibration.
-  Missing values now inherit 1; explicitly saved 0 is unchanged.
 
 ## Limits and validation
 
@@ -239,3 +241,4 @@ The shader has editor compilation and render regression coverage. This is
 not a claim of validation on every headset, rig, Unity version or graphics API.
 Calibrate and test your own model before release. Development logs and
 avatar-specific tools are deliberately not shipped in this package.
+

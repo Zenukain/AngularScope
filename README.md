@@ -12,9 +12,22 @@ Built for Unity's **Built-in Render Pipeline on PC**, tested in Unity 2022.3.22f
 2. Open `Assets/AngularScope/Examples/Scenes/AngularScopeDemo.unity` and enter Play mode.
 3. Use the on-screen magnification and focal-plane controls. Move the eye with A/D, W/S and Q/E; R resets the view and V shows the model.
 
-For the shader and documentation only, download [the smaller shader-only package](dist/AngularScope_ShaderOnly.unitypackage).
+For the shader, documentation and optional editor-only lens conversion tool,
+download [the smaller shader-only package](dist/AngularScope_ShaderOnly.unitypackage).
+It contains no example models, textures, cameras or animation assets.
 
 The shader **requires a separate camera and RenderTexture**. **PC VRChat avatars can use it, not just worlds.** For avatars, use the included animation-driven rig instead of the scripted demo; it supplies endpoint clips and a continuous zoom curve, not an automatic installer. Follow the [avatar integration guide](Assets/AngularScope/Documentation/AvatarIntegration.md).
+
+The optical display must be a **rigid MeshRenderer**, optionally attached to a
+weapon bone. The housing/covers can remain skinned. An editor conversion tool
+is included for single-bone skinned lenses; optical animation bindings must be
+updated after conversion. See the [lens setup guide](Assets/AngularScope/Documentation/README.md#local-coordinate-calibration-and-diagnostics).
+
+**Updating to v0.3.0:** if your optical display is skinned, convert only the
+lens to a rigid MeshRenderer, recalibrate its local centre and distances, and
+rebind optical/visibility animations before uploading. Existing rigid lenses
+do not need conversion. [Release notes](https://github.com/Zenukain/AngularScope/releases/tag/v0.3.0)
+describe the change and validation scope.
 
 ## Magnification and focal plane
 
@@ -69,3 +82,4 @@ No lens distortion or chromatic aberration is implemented. Quest avatar custom s
 ## License
 
 The independently authored shader, scripts, documentation, example meshes and textures are dedicated under **CC0-1.0**. See [LICENSE.md](LICENSE.md) and [the full dedication](CC0-1.0.txt). Unity and third-party components remain subject to their own terms.
+
