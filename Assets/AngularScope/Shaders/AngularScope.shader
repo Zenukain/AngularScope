@@ -28,16 +28,16 @@ Shader "AngularScope/Optical View"
         _AxisRight ("Local Camera Right", Vector) = (1,0,0,0)
         _AxisUp ("Local Camera Up", Vector) = (0,1,0,0)
         _AxisForward ("Local Camera Forward", Vector) = (0,0,1,0)
-        _LensCenter ("GPU Object-Space Rear Lens Centre", Vector) = (0,0,0,1)
+        _LensCenter ("Local Rear Lens Centre (Rigid MeshRenderer)", Vector) = (0,0,0,1)
         [Enum(Fixed,0,MagnificationLinked,1)] _ExitPupilMode ("Exit Pupil Mode", Float) = 1
         _Magnification ("Current Optical Magnification", Float) = 1
-        _ObjectiveRadius ("GPU Object-Space Effective Objective Radius", Float) = 0.012
-        _ExitPupilRadius ("GPU Object-Space Fixed / Maximum Exit Pupil Radius", Float) = 0.01875
+        _ObjectiveRadius ("Local Effective Objective Radius", Float) = 0.012
+        _ExitPupilRadius ("Local Fixed / Maximum Exit Pupil Radius", Float) = 0.01875
         _AxialVignette ("Axial Vignetting Strength", Range(1,8)) = 4
         _FieldTanHalfAngle ("Optical Field Radius (tan half angle)", Range(0.05,0.5)) = 0.16
         _OpticalShadowSoftness ("Moving Shadow Edge Softness", Range(0.01,0.4)) = 0.12
         _PupilFieldCoupling ("Moving Shadow Field Coupling", Range(0.05,1)) = 0.25
-        [Enum(WorldMetres,0,GPUObjectSpace,1)] _EyeReliefMode ("Eye Relief Units", Float) = 1
+        [Enum(WorldMetres,0,LocalSpace,1)] _EyeReliefMode ("Eye Relief Units", Float) = 1
         _EyeReliefDist ("Eye Relief (Selected Units)", Range(0,0.5)) = 0.12
         _EyeReliefTol ("Axial Vignetting Dead Zone", Range(0,0.2)) = 0.01
         _Darkness ("Outside View Brightness", Range(0,1)) = 0
@@ -163,9 +163,10 @@ Shader "AngularScope/Optical View"
                 // Empirical eye-shadow model, not a physical exit-pupil raytrace.
                 // Closer eye positions do not contract the soft shadow.
                 // Mode 0 uses fixed world distances, independent of object scale.
-                // Mode 1 converts BOTH distance and tolerance from GPU object
-                // units using the forward-axis scale. Do not reapply skinning
-                // scale already baked into GPU vertices/calibration values.
+                // Mode 1 converts BOTH local distance and tolerance using the
+                // forward-axis scale of a rigid MeshRenderer. Skinned optical
+                // displays are unsupported: vertex-baked scaling is not visible
+                // here and cannot be inferred from this matrix.
                 float reliefScale=_EyeReliefMode>=0.5 ? axialScale : 1;
                 float farError=max(0,lensDepth-_EyeReliefDist*reliefScale-_EyeReliefTol*reliefScale);
                 float coupling=_PupilFieldCoupling
@@ -247,11 +248,9 @@ Shader "AngularScope/Optical View"
                 o.objectScale=float2(frame.radialScale,frame.axialScale);
                 o.eyeRay=ScopeCoordinates(mul((float3x3)UNITY_MATRIX_I_V,
                     UnityObjectToViewPos(v.vertex)),frame);
-                // Lens centre must use the same GPU object space as vertices.
-                // A MeshRenderer uses native local coordinates. Skinned meshes
-                // may bake bone transforms/scale into GPU vertices: calibrate
-                // centre and radii in that resulting space, not raw bindpose
-                // coordinates. Never apply baked scale a second time.
+                // Centre and vertices share the rigid MeshRenderer's local
+                // space. Parent that renderer to a bone for rigid attachment;
+                // do not use a SkinnedMeshRenderer for the optical display.
                 o.lensRay=ScopeCoordinates(mul((float3x3)UNITY_MATRIX_I_V,
                     UnityObjectToViewPos(float4(_LensCenter.xyz,1))),frame);
                 return o;

@@ -1,0 +1,5 @@
+{
+  "name": "AngularScope.LensTools.Editor",
+  "includePlatforms": ["Editor"],
+  "autoReferenced": true
+}
