@@ -81,5 +81,19 @@ Run rebuilding only outside Play mode.
 
 Editor checks cover Play mode at 1x/3x/6x, independent cloned material/RT
 resources, both reticle layers and rendered close/overview views. These do not
-replace headset testing of your final rig. No colour aberration or lens
-distortion is applied: optional aesthetic effects should be a separate choice.
+replace headset testing of your final rig. The base demo has no lens effects;
+the separate scene below provides optional aesthetic comparisons.
+## Optional lens character demo
+
+Open `Scenes/AngularScopeLensEffectsDemo.unity` to try mild radial distortion and
+scene/eye-shadow colour fringe. The on-screen **Lens character** toggle compares
+the configured values with zero. **Purple shadow fringe** compares the optional purple
+palette with the original warm palette at the same 0.012 strength. Source material
+assets are not modified in Play mode.
+Use the grid, zoom slider, and eye movement controls for desktop tuning before VR.
+
+If the optional scene is absent, **Tools > AngularScope > Build Lens Character Example**
+creates a separate scene/material from the base demo; existing outputs are never overwritten.
+The base example remains unchanged. These settings are artistic approximations, not
+measured specifications from a particular real scope.
+

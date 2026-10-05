@@ -2,7 +2,7 @@
 
 > **AI disclaimer:** Code and documentation were developed with generative AI, human review, and iterative Unity/VR testing. This is an optical approximation; test it in your own setup.
 
-A configurable optical-view shader and a standalone Unity example for scope creators. Includes variable magnification, SFP/FFP reticles, two independent reticle layers, a sharp field stop, and a moving soft eye-box shadow.
+A configurable optical-view shader and a standalone Unity example for scope creators. Includes variable magnification, SFP/FFP reticles, two independent reticle layers, a sharp field stop, a moving soft eye-box shadow, and optional lens distortion and chromatic aberration.
 
 Built for Unity's **Built-in Render Pipeline on PC**, tested in Unity 2022.3.22f1.
 
@@ -77,6 +77,30 @@ The scope housing, mount, checkerboard range, meshes and reticle textures are ge
 
 ![Procedural example scope](docs/images/model.png)
 
+## Lens distortion and chromatic aberration
+
+New in **v0.5.0**: optional lens character, with all effect strengths defaulting to
+zero so existing saved tuning can remain unchanged.
+
+- **Radial distortion:** independently tune low/high-zoom coefficients for subtle
+  barrel or pincushion character. Scene and reticle can share the distorted view;
+  the field stop and eye-box geometry stay independent.
+- **Scene colour fringe:** subtle radial R/B separation, concentrated near the edge.
+- **Eye-box colour fringe:** warm or purple edging on the moving pupil shadow.
+  These palettes are artistic choices, not measured lens prescriptions.
+
+Try `Assets/AngularScope/Examples/Scenes/AngularScopeLensEffectsDemo.unity`.
+In Play mode, compare **Lens character** on/off and **Purple shadow fringe** on/off.
+The mild example uses distortion +0.04 / -0.005 at 1x / 6x, scene fringe 0.002,
+and shadow fringe 0.012. Camera-coverage checks warn about edge clipping; changing
+coverage also requires matching camera FOV and zoom animations.
+
+These are adjustable visual approximations, not a full physical lens simulation.
+Enabled scene fringe adds two texture lookups; no extra camera is created.
+Desktop regression and standalone import checks pass; user VR observations are
+positive, but universal XR/mirror compatibility and precise GPU overhead are not certified.
+See the [lens-character setup guide](Assets/AngularScope/Documentation/ScopeSetup.md#optional-lens-character).
+
 ## Documentation
 
 - [Scope Setup: specifications, comfort controls and zoom authoring](Assets/AngularScope/Documentation/ScopeSetup.md)
@@ -84,9 +108,9 @@ The scope housing, mount, checkerboard range, meshes and reticle textures are ge
 - [Example controls and regeneration](Assets/AngularScope/Examples/README.md)
 - [PC VRChat avatar integration and animation fixtures](Assets/AngularScope/Documentation/AvatarIntegration.md)
 
-No lens distortion or chromatic aberration is implemented. Quest avatar custom shaders, URP and HDRP are not supported by this package. A single mono scene texture cannot reproduce exact near-field binocular parallax.
+Quest avatar custom shaders, URP and HDRP are not supported by this package.
+A single mono scene texture cannot reproduce exact near-field binocular parallax.
 
 ## License
 
 The independently authored shader, scripts, documentation, example meshes and textures are dedicated under **CC0-1.0**. See [LICENSE.md](LICENSE.md) and [the full dedication](CC0-1.0.txt). Unity and third-party components remain subject to their own terms.
-

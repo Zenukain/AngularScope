@@ -173,4 +173,3 @@ demo scene. Duplicate generated assets before personal edits.
 
 The Unity fixtures have interpolation/binding checks, not VRChat upload or
 safety validation. Test the final avatar in the client.
-

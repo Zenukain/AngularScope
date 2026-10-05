@@ -7,12 +7,13 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Animated Optical View
+  m_Name: LensCharacterOpticalView
   m_Shader: {fileID: 4800000, guid: 1f369bbf19d65494ea39d5fafabf3925, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
-  m_InvalidKeywords: []
+  m_InvalidKeywords:
+  - _DISTORTRETICLE_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -28,7 +29,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 8400000, guid: 06ab949aa0a1d6849a75a6d18a4d2209, type: 2}
+        m_Texture: {fileID: 8400000, guid: b8a76ea3247e66c4988fe5ecbcba8cce, type: 2}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ReticleTex:
@@ -39,6 +40,11 @@ Material:
     m_Floats:
     - _AxialVignette: 4
     - _Darkness: 0
+    - _DistortReticle: 1
+    - _DistortionHigh: -0.005
+    - _DistortionLow: 0.04
+    - _DistortionMaxMagnification: 6
+    - _DistortionMinMagnification: 1
     - _EmissionPower: 1.11
     - _ExitPupilMode: 1
     - _ExitPupilRadius: 0.01875
@@ -50,6 +56,7 @@ Material:
     - _IlluminationFocalPlane: 0
     - _IlluminationOpacity: 1
     - _IlluminationScale: 0.278
+    - _IlluminationTextureMode: 0
     - _Magnification: 1
     - _ObjectiveRadius: 0.012
     - _OpticalShadowSoftness: 0.12
@@ -58,7 +65,11 @@ Material:
     - _ReticleRefMagnification: 6
     - _ReticleScale: 0.2771281
     - _ReticleTanHalfFov: 0.5773503
+    - _ReticleTextureMode: 0
+    - _SceneChromaticAberration: 0.002
     - _ScopeDebug: 0
+    - _ShadowChromaticAberration: 0.012
+    - _ShadowFringePalette: 0
     - _TanHalfBaseFov: 0.17
     m_Colors:
     - _AxisForward: {r: 0, g: 0, b: 1, a: 0}

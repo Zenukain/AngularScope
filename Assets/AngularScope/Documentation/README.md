@@ -192,8 +192,10 @@ _ReticleScale = _FieldTanHalfAngle / _ReticleTanHalfFov
               = 0.16 / 0.5773503 ~= 0.277128
 ```
 
-The retained 0.278 preset gives 1.00315 times the field radius. The formula
-aligns cardinal texture edges, not square corners or ink endpoints.
+The preset uses 0.2771281, the calculated ratio rounded to float precision.
+This is the undistorted reference size: the formula aligns cardinal texture
+edges, not square corners or ink endpoints. Optional distortion can move their
+apparent positions. The independent illumination size is not recalibrated here.
 
 To fill a fraction q of the field radius, use `q * field / calibration`.
 For FFP at a different magnification M, multiply the resulting size by
@@ -283,10 +285,46 @@ Hidden _ScopeDebug may be set by script/material debugging:
 - 4: moving-eye-shadow coverage.
 Restore 0 afterwards. View distance 2 helps detect wrong centre/unit settings.
 
+## Optional distortion and colour fringe
+
+All effects default to zero, preserving the original view. Use the editor
+[Scope Setup window](ScopeSetup.md#optional-lens-character) or these material controls:
+
+| Property | Meaning |
+|---|---|
+| `_DistortionLow`, `_DistortionHigh` | Field-edge inverse lookup coefficients; positive barrel, negative pincushion |
+| `_DistortionMinMagnification`, `_DistortionMaxMagnification` | Zoom references for linear interpolation; clamp outside their range |
+| `_DistortReticle` | Apply the geometric distortion to both reticle layers, before SFP/FFP scaling |
+| `_SceneChromaticAberration` | R/B radial image lookup offset fraction at the field edge; 0–0.02 |
+| `_ShadowChromaticAberration` | Channel-dependent pupil-radius offset fraction; 0–0.05 |
+| `_ShadowFringePalette` | 0 Warm (original channel ordering), 1 Purple (R+B outside G); artistic palette choice |
+
+Image distortion uses `sampleSlope = slope * (1 + k * normalizedRadiusSquared)`.
+The field-stop and empirical pupil geometry use the original slope, so lens
+character does not alter those masks or introduce an aim offset at the centre.
+Colour fringe is a stylized RGB approximation, not wavelength raytracing. The
+reticle gets geometric distortion when enabled, but not scene RGB separation.
+Shadow colour fringe affects the composed scene **and** reticle near the pupil edge.
+
+Scene colour fringe adds two RT texture lookups when enabled; shadow colour fringe
+evaluates three edge coverages instead of one, reusing pupil geometry. Material-uniform
+zero branches skip those extra evaluations in source; compiler/hardware behaviour
+and actual GPU cost must be checked on your target. No additional camera or RT is added.
+
+Increase camera overscan if distorted R/B lookups approach texture boundaries.
+Keep camera FOV animations synchronized with the updated base tangent. Start on
+the demo grid, then verify the headset and both eyes. These controls are not a
+claim of matching any particular real scope.
+The included editor-only material Inspector warns when the worst configured edge
+lookup exceeds camera coverage, but does not modify or block direct edits. Update
+the actual camera and zoom animations as well as the shader tangent. The default
+Warm palette is preserved; Purple is optional, and no eye-distance colour inversion
+is implemented. The mild preset shadow strength is 0.012, not 0.02.
+
 ## Limits and validation
 
 This is a distant-scene visual approximation, not physical lens-group
-refraction. It does not model aberrations, brightness loss, human-pupil
+refraction. It does not model measured lens aberrations, brightness loss, human-pupil
 integration, zoom-dependent eye relief or calibrated ballistic graduations.
 One square mono texture per scope is assumed. Use separate cameras/textures
 for simultaneous scopes to avoid image overwrites.
@@ -304,4 +342,3 @@ The shader has editor compilation and render regression coverage. This is
 not a claim of validation on every headset, rig, Unity version or graphics API.
 Calibrate and test your own model before release. Development logs and
 avatar-specific tools are deliberately not shipped in this package.
-

@@ -41,7 +41,8 @@ namespace AngularScope.Examples.Editor
             lensMaterial.SetFloat("_IlluminationOpacity", 1);
             lensMaterial.SetFloat("_IlluminationEmission", 1);
             lensMaterial.SetFloat("_EyeReliefMode", 1);
-            lensMaterial.SetFloat("_ReticleScale", .278f);
+            lensMaterial.SetFloat("_ReticleScale", lensMaterial.GetFloat("_FieldTanHalfAngle")
+                / lensMaterial.GetFloat("_ReticleTanHalfFov"));
             lensMaterial.SetFloat("_IlluminationScale", .278f);
             lensMaterial = SaveAsset(lensMaterial, Root + "/Materials/ExampleOpticalView.mat");
 

@@ -56,7 +56,7 @@ Material:
     - _PupilFieldCoupling: 0.25
     - _ReticleFocalPlane: 0
     - _ReticleRefMagnification: 6
-    - _ReticleScale: 0.278
+    - _ReticleScale: 0.2771281
     - _ReticleTanHalfFov: 0.5773503
     - _ScopeDebug: 0
     - _TanHalfBaseFov: 0.17

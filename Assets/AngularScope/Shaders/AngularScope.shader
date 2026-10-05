@@ -13,7 +13,7 @@ Shader "AngularScope/Optical View"
         _Color ("View Tint", Color) = (1,1,1,1)
         [HDR] _ReticleColor ("Reticle Color", Color) = (0.7,0,0.04,1)
         _EmissionPower ("Reticle Brightness", Range(0,10)) = 1.11
-        _ReticleScale ("Reticle Size", Range(0.1,5)) = 0.278
+        _ReticleScale ("Reticle Size", Range(0.1,5)) = 0.2771281
         _ReticleOffset ("Reticle Offset", Vector) = (0,0,0,0)
         [Enum(SFP,0,FFP,1)] _ReticleFocalPlane ("Reticle Focal Plane", Float) = 0
         _IlluminationTex ("Illumination Overlay", 2D) = "white" {}
@@ -43,6 +43,14 @@ Shader "AngularScope/Optical View"
         _EyeReliefDist ("Eye Relief (Selected Units)", Range(0,0.5)) = 0.12
         _EyeReliefTol ("Axial Vignetting Dead Zone", Range(0,0.2)) = 0.01
         _Darkness ("Outside View Brightness", Range(0,1)) = 0
+        [Header(Optional Lens Character)] _DistortionLow ("Low-Zoom Distortion (+ Barrel / - Pincushion)", Range(-0.15,0.15)) = 0
+        _DistortionHigh ("High-Zoom Distortion (+ Barrel / - Pincushion)", Range(-0.15,0.15)) = 0
+        _DistortionMinMagnification ("Distortion Low-Zoom Reference", Float) = 1
+        _DistortionMaxMagnification ("Distortion High-Zoom Reference", Float) = 6
+        [Toggle] _DistortReticle ("Apply Distortion to Both Reticle Layers", Float) = 1
+        _SceneChromaticAberration ("Scene Colour Fringe (Field-Edge Fraction)", Range(0,0.02)) = 0
+        _ShadowChromaticAberration ("Eye-Shadow Colour Fringe (Radius Fraction)", Range(0,0.05)) = 0
+        [Enum(Warm,0,Purple,1)] _ShadowFringePalette ("Eye-Shadow Fringe Palette (Stylized)", Float) = 0
         [HideInInspector] _ScopeDebug ("Scope Diagnostic Mode", Float) = 0
     }
     SubShader
@@ -55,6 +63,7 @@ Shader "AngularScope/Optical View"
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
+            #pragma target 3.0
             #pragma multi_compile_instancing
             #include "UnityCG.cginc"
             struct appdata
@@ -88,6 +97,9 @@ Shader "AngularScope/Optical View"
             float _EmissionPower, _ReticleScale, _TanHalfBaseFov, _ReticleTanHalfFov;
             float _EyeReliefMode, _EyeReliefDist, _EyeReliefTol, _Darkness;
             float _ScopeDebug;
+            float _DistortionLow, _DistortionHigh, _DistortionMinMagnification, _DistortionMaxMagnification;
+            float _DistortReticle, _SceneChromaticAberration, _ShadowChromaticAberration;
+            float _ShadowFringePalette;
 
             struct ScopeFrame
             {
@@ -160,7 +172,7 @@ Shader "AngularScope/Optical View"
             // default look; this is not a measured physical pupil radius.
             static const float PupilShadowReferenceRadius=0.01875;
 
-            float EyeShadowCoverage(float2 lensXY, float2 eyeOffset,
+            float EyeShadowRadius(float2 lensXY, float2 eyeOffset,
                                     float lensDepth, float radialScale, float axialScale)
             {
                 // Empirical eye-shadow model, not a physical exit-pupil raytrace.
@@ -182,7 +194,57 @@ Shader "AngularScope/Optical View"
                     coupling*=pupilRadius/PupilShadowReferenceRadius;
                 float2 pupilXY=eyeOffset+lensXY*coupling;
                 float radius=length(pupilXY)/max(pupilRadius*radialScale,0.000001);
-                return CircleCoverage(radius,_OpticalShadowSoftness);
+                return radius;
+            }
+
+            float3 EyeShadowCoverage(float radius)
+            {
+                float coverage=CircleCoverage(radius,_OpticalShadowSoftness);
+                if(_ShadowChromaticAberration<=0) return coverage.xxx;
+                // A stylized wavelength-dependent pupil edge, NOT raytraced CA.
+                // Reuse pupil geometry; only the three coverage tests differ.
+                float fringe=clamp(_ShadowChromaticAberration,0,0.05);
+                float outer=CircleCoverage(radius/(1+fringe),_OpticalShadowSoftness);
+                float inner=CircleCoverage(radius/(1-fringe),_OpticalShadowSoftness);
+                if(_ShadowFringePalette>=0.5)
+                {
+                    return float3(outer,inner,outer);
+                }
+                return float3(outer,coverage,inner);
+            }
+
+            float2 DistortedSlope(float2 slope, float normalizedRadiusSquared)
+            {
+                float span=max(_DistortionMaxMagnification-_DistortionMinMagnification,0.0001);
+                float t=saturate((_Magnification-_DistortionMinMagnification)/span);
+                float k=clamp(lerp(_DistortionLow,_DistortionHigh,t),-0.15,0.15);
+                // Inverse image lookup: +k samples farther out, so visible
+                // features move inward (barrel). Field/eye masks stay undistorted.
+                return slope*(1+k*normalizedRadiusSquared);
+            }
+
+            float2 ViewUV(float2 slope)
+            {
+                float2 uv=0.5+slope/(2*max(_TanHalfBaseFov,0.0001));
+                #if UNITY_UV_STARTS_AT_TOP
+                if(_MainTex_TexelSize.y<0) uv.y=1-uv.y;
+                #endif
+                return uv;
+            }
+
+            fixed3 SampleScopeView(float2 slope, float normalizedRadiusSquared)
+            {
+                float2 uv=ViewUV(slope);
+                fixed3 image=tex2D(_MainTex,uv).rgb;
+                if(_SceneChromaticAberration>0)
+                {
+                    float fringe=clamp(_SceneChromaticAberration,0,0.02)*normalizedRadiusSquared;
+                    float2 redUV=ViewUV(slope*(1+fringe));
+                    float2 blueUV=ViewUV(slope*(1-fringe));
+                    image.r=lerp(_Darkness,tex2D(_MainTex,redUV).r,RectangleCoverage(redUV));
+                    image.b=lerp(_Darkness,tex2D(_MainTex,blueUV).b,RectangleCoverage(blueUV));
+                }
+                return image*_Color.rgb;
             }
 
             float2 ReticleProjectionUV(float2 slope, float focalPlane)
@@ -218,21 +280,18 @@ Shader "AngularScope/Optical View"
                 return lerp(background,reticle.rgb*tint*brightness,reticle.a*opacity);
             }
 
-            fixed3 ComposeViewAndReticle(float2 imageUV, float2 slope)
+            fixed3 ComposeViewAndReticle(float2 sceneSlope, float2 reticleSlope, float radiusSquared)
             {
-                #if UNITY_UV_STARTS_AT_TOP
-                if(_MainTex_TexelSize.y<0) imageUV.y=1-imageUV.y;
-                #endif
-                fixed3 image=tex2D(_MainTex,imageUV).rgb*_Color.rgb;
+                fixed3 image=SampleScopeView(sceneSlope,radiusSquared);
                 fixed4 reticle=SampleReticleLayer(_ReticleTex,
-                    ReticleProjectionUV(slope,_ReticleFocalPlane),_ReticleScale,_ReticleOffset.xy,_ReticleTextureMode);
+                    ReticleProjectionUV(reticleSlope,_ReticleFocalPlane),_ReticleScale,_ReticleOffset.xy,_ReticleTextureMode);
                 fixed3 composed=BlendReticle(image,reticle,_ReticleColor.rgb,_EmissionPower,1);
                 // Material-uniform condition; do not sample an unused overlay.
                 // Whether this saves GPU work depends on the target compiler.
                 if(_IlluminationOpacity>0)
                 {
                     fixed4 illumination=SampleReticleLayer(_IlluminationTex,
-                        ReticleProjectionUV(slope,_IlluminationFocalPlane),_IlluminationScale,_IlluminationOffset.xy,_IlluminationTextureMode);
+                        ReticleProjectionUV(reticleSlope,_IlluminationFocalPlane),_IlluminationScale,_IlluminationOffset.xy,_IlluminationTextureMode);
                     composed=BlendReticle(composed,illumination,_IlluminationColor.rgb,
                                           _IlluminationEmission,saturate(_IlluminationOpacity));
                 }
@@ -270,7 +329,11 @@ Shader "AngularScope/Optical View"
                 float3 ray=i.eyeRay;
                 float axial=ray.z;
                 float2 slope=ray.xy/max(axial,0.00001);
-                float2 uv=0.5+slope/(2*max(_TanHalfBaseFov,0.0001));
+                // Share the raw angular radius between distortion and scene CA.
+                // Coverage masks deliberately retain the undistorted ray.
+                float radiusSquared=dot(slope,slope)/max(_FieldTanHalfAngle*_FieldTanHalfAngle,0.00000001);
+                float2 sceneSlope=DistortedSlope(slope,radiusSquared);
+                float2 uv=ViewUV(sceneSlope);
                 float inside=RectangleCoverage(uv)*step(0.00001,axial);
                 float lensDepth=i.lensRay.z;
                 if(_ScopeDebug>0.5 && _ScopeDebug<1.5) return float4(i.objectScale.xxx,1);
@@ -281,18 +344,20 @@ Shader "AngularScope/Optical View"
                 float2 lensXY=ProjectToLensPlane(ray,i.lensRay,axial,lensDepth);
                 float2 eyeOffset=-i.lensRay.xy;
                 // The lens mesh and housing supply the physical boundary.
-                float pupilMask=EyeShadowCoverage(lensXY,eyeOffset,lensDepth,i.objectScale.x,i.objectScale.y);
+                float pupilRadius=EyeShadowRadius(lensXY,eyeOffset,lensDepth,i.objectScale.x,i.objectScale.y);
+                float3 pupilMask=EyeShadowCoverage(pupilRadius);
                 float fieldMask=OpticalFieldCoverage(slope);
                 if(_ScopeDebug>2.5 && _ScopeDebug<3.5) return float4(fieldMask.xxx,1);
-                if(_ScopeDebug>3.5) return float4(pupilMask.xxx,1);
-                float visibility=pupilMask*fieldMask*inside*step(0.00001,lensDepth);
+                if(_ScopeDebug>3.5) return float4(pupilMask,1);
+                float3 visibility=pupilMask*fieldMask*inside*step(0.00001,lensDepth);
 
                 // 3. Composition does not affect angular zero or magnification.
-                fixed3 image=ComposeViewAndReticle(uv,slope);
+                float2 reticleSlope=_DistortReticle>=0.5 ? sceneSlope : slope;
+                fixed3 image=ComposeViewAndReticle(sceneSlope,reticleSlope,radiusSquared);
                 return fixed4(lerp(_Darkness.xxx,image,visibility),1);
             }
             ENDCG
         }
     }
+    CustomEditor "AngularScope.Editor.ScopeMaterialInspector"
 }
-

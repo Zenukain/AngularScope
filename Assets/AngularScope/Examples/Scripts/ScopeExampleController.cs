@@ -19,6 +19,8 @@ namespace AngularScope.Examples
         public bool firstFocalPlane;
         public bool linkedExitPupil = true;
         public bool showControls = true;
+        public bool enableLensCharacter = true;
+        public bool purpleShadowFringe;
 
         Material originalMaterial;
         Material runtimeMaterial;
@@ -28,6 +30,7 @@ namespace AngularScope.Examples
         Vector3 initialViewerPosition;
         Quaternion initialViewerRotation;
         float initialViewerFov;
+        Vector4 lensCharacter;
 
         void OnEnable()
         {
@@ -39,6 +42,8 @@ namespace AngularScope.Examples
                 return;
             runtimeMaterial = new Material(originalMaterial);
             runtimeMaterial.name = originalMaterial.name + " (Demo Instance)";
+            lensCharacter = ReadLensCharacter(runtimeMaterial);
+            purpleShadowFringe=runtimeMaterial.GetFloat("_ShadowFringePalette")>.5f;
             runtimeTexture = new RenderTexture(originalTexture);
             runtimeTexture.name = originalTexture.name + " (Demo Instance)";
             runtimeTexture.Create();
@@ -69,6 +74,23 @@ namespace AngularScope.Examples
             // The illumination overlay follows the same focal plane in this example.
             runtimeMaterial.SetFloat("_IlluminationFocalPlane", firstFocalPlane ? 1 : 0);
             runtimeMaterial.SetFloat("_ExitPupilMode", linkedExitPupil ? 1 : 0);
+            ApplyLensCharacter(enableLensCharacter ? lensCharacter : Vector4.zero);
+            runtimeMaterial.SetFloat("_ShadowFringePalette",purpleShadowFringe?1:0);
+        }
+
+        static Vector4 ReadLensCharacter(Material material)
+        {
+            return new Vector4(
+                material.GetFloat("_DistortionLow"), material.GetFloat("_DistortionHigh"),
+                material.GetFloat("_SceneChromaticAberration"), material.GetFloat("_ShadowChromaticAberration"));
+        }
+
+        void ApplyLensCharacter(Vector4 strengths)
+        {
+            runtimeMaterial.SetFloat("_DistortionLow", strengths.x);
+            runtimeMaterial.SetFloat("_DistortionHigh", strengths.y);
+            runtimeMaterial.SetFloat("_SceneChromaticAberration", strengths.z);
+            runtimeMaterial.SetFloat("_ShadowChromaticAberration", strengths.w);
         }
 
         void Update()
@@ -109,7 +131,7 @@ namespace AngularScope.Examples
         void OnGUI()
         {
             if (!showControls || !runtimeMaterial) return;
-            GUILayout.BeginArea(new Rect(15, 15, 230, 310), GUI.skin.box);
+            GUILayout.BeginArea(new Rect(15, 15, 230, 365), GUI.skin.box);
             GUILayout.Label("AngularScope - Unity example");
             GUILayout.Label("Zoom: " + magnification.ToString("F2") + "x");
             magnification = GUILayout.HorizontalSlider(magnification, 1, Mathf.Max(1, maximumMagnification));
@@ -120,6 +142,8 @@ namespace AngularScope.Examples
             GUILayout.EndHorizontal();
             firstFocalPlane = GUILayout.Toggle(firstFocalPlane, "FFP reticle (off = SFP)");
             linkedExitPupil = GUILayout.Toggle(linkedExitPupil, "Magnification-linked exit pupil");
+            enableLensCharacter = GUILayout.Toggle(enableLensCharacter, "Lens character (if configured)");
+            purpleShadowFringe = GUILayout.Toggle(purpleShadowFringe, "Purple shadow fringe (off = warm)");
             GUILayout.Label("A/D: eye left/right\nW/S: eye up/down\nQ/E: eye away/towards\nShift: faster movement\nH: hide/show this panel");
             if (viewer)
             {

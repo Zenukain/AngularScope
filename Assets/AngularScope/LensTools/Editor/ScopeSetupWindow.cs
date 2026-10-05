@@ -15,7 +15,7 @@ namespace AngularScope.Editor
         [SerializeField] Camera sourceCamera;
         [SerializeField] Transform animationRoot;
         [SerializeField] ScopeSpecificationSettings draft = new ScopeSpecificationSettings();
-        [SerializeField] bool imported, advanced, differences;
+        [SerializeField] bool imported, advanced, differences, lensEffects;
         [SerializeField] ScopeSpecificationProfile profile;
         [SerializeField] bool showGuide = true;
         Vector2 scroll;
@@ -139,7 +139,10 @@ namespace AngularScope.Editor
                     status="Draft size updated only. Fits texture edges at SFP / FFP reference; image margins and ink endpoints still matter.";
                 });
                 Divider();
-                advanced=EditorGUILayout.Foldout(advanced,"4. Advanced tuning and coordinates",true);
+                lensEffects=EditorGUILayout.Foldout(lensEffects,"4. Optional lens character — distortion and colour fringe",true);
+                if(lensEffects)DrawLensEffects();
+                Divider();
+                advanced=EditorGUILayout.Foldout(advanced,"5. Advanced tuning and coordinates",true);
                 EditorGUILayout.Space(5);
                 if(advanced)DrawAdvanced();
                 Heading("Review before applying");
@@ -210,6 +213,29 @@ namespace AngularScope.Editor
             });
             Help("All cm/mm values are interpreted at the saved reference size. Prefer positive uniform scale. Specification-derived objective size still drives an EMPIRICAL eye-box model, not full optical refraction.");
         }
+        void DrawLensEffects()
+        {
+            Help("All effects default to zero. These are stylized lens cues, not a measured optical prescription. Editing here changes only the draft.");
+            draft.distortionLow=Number("Low-zoom distortion (%)",draft.distortionLow*100,"Positive = barrel (features move inward); negative = pincushion. Inverse radial lookup, normalized to field radius.")*.01f;
+            draft.distortionHigh=Number("High-zoom distortion (%)",draft.distortionHigh*100,"Linearly blended by magnification. This is NOT an exact percentage displacement of visible features.")*.01f;
+            draft.distortionMinimum=Number("Low distortion reference (x)",draft.distortionMinimum,"Zoom where the low coefficient is used; outside the range the nearest endpoint is held.");
+            draft.distortionMaximum=Number("High distortion reference (x)",draft.distortionMaximum,"Must exceed the low reference. Independent of FFP size reference.");
+            draft.distortReticle=EditorGUILayout.ToggleLeft("Distort main reticle + illumination with the scenery",draft.distortReticle);
+            draft.sceneColourFringe=Number("Scene colour fringe (%)",draft.sceneColourFringe*100,"R/B radial sample separation at the field edge. 0 disables extra image sampling; keep subtle.")*.01f;
+            draft.shadowColourFringe=Number("Moving-shadow colour fringe (%)",draft.shadowColourFringe*100,"Channel-dependent pupil-radius difference. Colours the moving shadow edge, not the fixed field stop.")*.01f;
+            draft.purpleShadowFringe=EditorGUILayout.Popup("Moving-shadow colour",draft.purpleShadowFringe?1:0,new[]{"Warm — original R/G/B ordering","Purple — R+B survive outside green"})==1;
+            if(GUILayout.Button("Try mild lens character in draft — not applied"))
+            {
+                draft.distortionLow=.04f;draft.distortionHigh=-.005f;
+                draft.distortionMinimum=draft.minimumMagnification;
+                draft.distortionMaximum=Mathf.Max(draft.maximumMagnification,draft.minimumMagnification+.001f);
+                draft.sceneColourFringe=.002f;draft.shadowColourFringe=.012f;draft.distortReticle=true;
+                status="Mild experimental values loaded into draft. Review coverage and Apply explicitly; headset validation is still needed.";
+            }
+            if(GUILayout.Button("Disable lens effects in draft"))
+            {draft.distortionLow=draft.distortionHigh=draft.sceneColourFringe=draft.shadowColourFringe=0;}
+            Help($"Required camera base tangent: > {draft.RequiredCameraTangent:F5}. Current draft: {draft.BaseCameraTangent:F5}. If coverage is insufficient, increase Advanced camera margin and regenerate zoom clips. A wider camera uses fewer RT pixels for the visible field.");
+        }
         void Try(Action action) { try{action();}catch(Exception e){status=e.Message;Debug.LogWarning(e.Message);}Repaint(); }
         void FindCamera()
         {
@@ -250,6 +276,11 @@ namespace AngularScope.Editor
             s.reticleReference=m.GetFloat("_ReticleRefMagnification");s.reticleOffset=m.GetVector("_ReticleOffset");s.illuminationOffset=m.GetVector("_IlluminationOffset");
             s.lensCentre=m.GetVector("_LensCenter");s.previewMagnification=m.GetFloat("_Magnification");
             s.minimumMagnification=Mathf.Min(1,s.previewMagnification);s.maximumMagnification=Mathf.Max(6,s.previewMagnification,s.reticleReference);
+            s.distortionLow=m.GetFloat("_DistortionLow");s.distortionHigh=m.GetFloat("_DistortionHigh");
+            s.distortionMinimum=m.GetFloat("_DistortionMinMagnification");s.distortionMaximum=m.GetFloat("_DistortionMaxMagnification");
+            s.distortReticle=m.GetFloat("_DistortReticle")>.5f;
+            s.sceneColourFringe=m.GetFloat("_SceneChromaticAberration");s.shadowColourFringe=m.GetFloat("_ShadowChromaticAberration");
+            s.purpleShadowFringe=m.GetFloat("_ShadowFringePalette")>.5f;
             return s;
         }
         public static Dictionary<string,float> Plan(ScopeSpecificationSettings s)
@@ -263,7 +294,11 @@ namespace AngularScope.Editor
                 {"_PupilFieldCoupling",s.shadowCoupling},{"_AxialVignette",s.farTightening},
                 {"_FieldTanHalfAngle",s.ApparentFieldTangent},{"_TanHalfBaseFov",s.BaseCameraTangent},
                 {"_Magnification",s.previewMagnification},{"_ReticleScale",s.reticleSize},{"_IlluminationScale",s.illuminationSize},
-                {"_ReticleFocalPlane",s.reticleFFP?1:0},{"_IlluminationFocalPlane",s.illuminationFFP?1:0},{"_ReticleRefMagnification",s.reticleReference}};
+                {"_ReticleFocalPlane",s.reticleFFP?1:0},{"_IlluminationFocalPlane",s.illuminationFFP?1:0},{"_ReticleRefMagnification",s.reticleReference},
+                {"_DistortionLow",s.distortionLow},{"_DistortionHigh",s.distortionHigh},
+                {"_DistortionMinMagnification",s.distortionMinimum},{"_DistortionMaxMagnification",s.distortionMaximum},
+                {"_DistortReticle",s.distortReticle?1:0},{"_SceneChromaticAberration",s.sceneColourFringe},
+                {"_ShadowChromaticAberration",s.shadowColourFringe},{"_ShadowFringePalette",s.purpleShadowFringe?1:0}};
         }
         public static string ValidateConnection(MeshRenderer r,int index,Camera camera,ScopeSpecificationSettings s)
         {
@@ -341,4 +376,3 @@ namespace AngularScope.Editor
         }
     }
 }
-

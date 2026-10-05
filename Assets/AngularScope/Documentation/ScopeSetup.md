@@ -87,10 +87,47 @@ the [avatar guide](AvatarIntegration.md). Do not blend endpoint FOV angles for
 continuous zoom. Generation currently supports material slot **0** only; tuning
 other material slots is supported, but their animation bindings need manual work.
 
+## Optional lens character
+
+Expand **Optional lens character** for independent distortion, scene colour fringe
+and moving-shadow colour fringe. All coefficients default to **0**; **Try mild lens
+character** edits the draft only. Review and Apply explicitly.
+
+- Distortion is an inverse radial lookup, normalized to the apparent field radius.
+  Positive coefficients give barrel distortion; negative give pincushion. The low
+  and high coefficients interpolate linearly between their own zoom references.
+  The percent label describes the edge lookup coefficient, not exact feature displacement.
+- The reticle toggle applies the same geometric lookup to **both** reticle layers,
+  before their independent SFP/FFP projections. Off leaves both reticles undistorted.
+  This is an artistic choice, not an exact optical prescription for either focal plane.
+- Scene fringe separates the R/B image lookup radially, growing with squared field
+  radius. Shadow fringe changes channel-dependent pupil radii. Neither changes the fixed field stop.
+- Shadow colour can be **Warm** (original R/G/B ordering) or **Purple** (R+B outside G).
+  This is a visual palette choice, not measured wavelength behaviour; it does not
+  switch with eye distance. The default remains Warm for existing materials.
+- The mild draft uses +4% / -0.5% distortion, 0.2% scene fringe and 1.2% shadow fringe.
+  These are experimental visual starting points, not measured lens specifications.
+
+Positive distortion and scene fringe require extra camera coverage. The tool checks
+`base tangent > field tangent * (1 + max(0, low, high)) * (1 + scene fringe)`.
+If needed increase Advanced camera margin/base tangent, then regenerate matching
+zoom clips. The tool never silently rewrites existing animations. Extra coverage
+trades some effective RT resolution for edge safety.
+
+The regular material Inspector also displays a **warning** for insufficient camera
+coverage, including when multiple materials are selected. It never modifies settings
+or blocks manual edits. Setting a bigger material tangent alone does not update the
+real camera FOV or animation curves; use the connected Setup workflow for those.
+
+Check the grid in `Examples/Scenes/AngularScopeLensEffectsDemo.unity`: its on-screen
+Lens character toggle compares the configured effects with zero, and **Purple shadow
+fringe** compares palettes at the same strength, without editing
+source material assets. Check both eyes and your headset before choosing final values.
+
 ## Limits
 
 This tool sets a starting point; it does not reproduce lens groups, brightness,
-aberrations, real exit-pupil placement or manufacturer eye-box dimensions.
+measured aberrations, real exit-pupil placement or manufacturer eye-box dimensions.
 It does not resize meshes, reorient the camera, crop textures, install avatar
 components or alter network settings. Check camera alignment, rendering layers,
 existing animations and both eyes in your final setup. Numeric/Unity testing is
@@ -99,4 +136,3 @@ not a guarantee for every headset or VRChat rig.
 If a separate authoring/build-time component also writes this material, update
 or reimport its stored values after Apply. This window does not synchronize
 third-party or private build components; their bake can otherwise overwrite tuning.
-
