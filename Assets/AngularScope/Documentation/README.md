@@ -34,6 +34,12 @@ Axes must be nonzero, mutually perpendicular, and aligned with the image camera.
 
 ## Quick start
 
+Prefer physical specifications and labelled units over shader equations?
+Use **Tools > AngularScope > Scope Setup** and follow the
+[specification-based authoring guide](ScopeSetup.md). The editor-only window
+imports existing tuning without applying it, reviews proposed changes, and can
+generate matching zoom clips. No runtime component is added to your avatar.
+
 For a working scene instead of manual setup, import the optional
 AngularScope_WithExample.unitypackage, open
 Assets/AngularScope/Examples/Scenes/AngularScopeDemo.unity and press Play.
@@ -99,6 +105,63 @@ This approximates etched-line contrast through image composition; it does
 not simulate scattering or absorption in illuminated glass.
 Texture alpha defines both layers' coverage. Overlay opacity adds a strength
 control; tint color alpha is not used. The illumination overlay is composited over the reticle.
+
+### Texture modes and lightweight 4K masks
+
+Each layer has its own texture mode (`_ReticleTextureMode` /
+`_IlluminationTextureMode`):
+
+- **ColorRGBA (0, compatibility-preserving default):** texture RGB supplies
+  colour and alpha supplies coverage; material tint/brightness still apply.
+- **AlphaMask (1):** PNG alpha supplies coverage; stored RGB is ignored.
+  Recommended for monochrome PNG art, avoiding dark RGB fringes around illumination.
+- **RedMask (2):** linear red-channel data supplies coverage; RGB colour and
+  texture alpha are ignored. Use this for BC4 masks.
+
+For a lightweight mask, select a transparent PNG and open **Tools > AngularScope >
+Create Lightweight Reticle Mask**. Choose a new output filename. The tool copies
+the source PNG's alpha into red and configures linear data, PC Standalone BC4,
+full source dimensions, mipmaps, Trilinear filtering and Clamp. The original
+asset/import settings are untouched. An optional AngularScope material target
+can receive the mask and RedMask mode; colour, opacity, size, offsets and focal
+plane remain unchanged. Opaque PNGs and overwriting existing outputs are rejected.
+No runtime scripts, expression parameters or special external packages are needed.
+
+The decoder reads original PNG bytes even if Unity currently imports it at 2K:
+a 4096-square source becomes a 4096-square mask. Check the final target platform's
+format and size after import; the supplied preset is **PC Standalone**, not Android.
+BC4 is lossy: inspect fine graduations at low and high zoom. It does not guarantee
+subpixel-line visibility or replace MSDF/vector rendering.
+
+| Texture with full mip chain | Approximate GPU storage |
+|---|---:|
+| 4K BC4 | 10.67 MiB |
+| 512-square BC4 | 0.17 MiB |
+| 4K BC3/DXT5 or BC7 | 21.33 MiB |
+
+These are compressed texture-storage estimates, not PNG size, download size or
+total Editor process memory. A 4K main mask plus 512 centre mask is about 10.84 MiB
+(11.36 MB). Two full-size 4K BC4 masks instead total about 21.33 MiB.
+
+### Optional cropped illumination image
+
+Cropping is deliberately **not automatic**: the tool preserves the canvas and
+alignment. You may draw/export just the centre illumination on a smaller canvas.
+To preserve alignment when cropping a square source of width W to a square region
+of width w, with crop centre c in normalized bottom-left-origin UV coordinates:
+
+```text
+f = w / W
+new layer size = old layer size * f
+new layer offset = (old layer offset + c - 0.5) / f
+```
+
+For a centred 512 crop from 4096: size becomes old size / 8 and an initially zero
+offset remains zero. Keep focal-plane selection/reference unchanged. Resizing
+the cropped image changes texel density, not this geometric ratio. Merely
+resizing the whole canvas to 512 is NOT a crop. The illumination size field
+accepts small positive values needed for this workflow. Transparent backgrounds
+are still required; enable the illumination opacity separately.
 
 Each focal-plane selector: 0 = SFP, 1 = FFP. SFP apparent size stays fixed.
 FFP apparent size scales with optical M, matching SFP size at the shared

@@ -52,6 +52,12 @@ Only the reference changes to `1` below: reticle and camera settings are unchang
 
 The black etched cross and red illuminated centre are independent texture layers.
 
+Monochrome art can use AlphaMask or a lightweight linear RedMask (BC4), independently
+for each layer. The included editor conversion tool preserves original PNG dimensions,
+including 4K, without altering the source. A 4K BC4 main mask plus a cropped 512 centre
+mask uses about 10.84 MiB of GPU texture storage. Normal coloured RGBA art still works.
+See [mask modes and conversion](Assets/AngularScope/Documentation/README.md#texture-modes-and-lightweight-4k-masks).
+
 ## Field stop and eye-box shadow
 
 Two independent masks shape the view:
@@ -73,6 +79,7 @@ The scope housing, mount, checkerboard range, meshes and reticle textures are ge
 
 ## Documentation
 
+- [Scope Setup: specifications, comfort controls and zoom authoring](Assets/AngularScope/Documentation/ScopeSetup.md)
 - [Shader setup and parameter guide](Assets/AngularScope/Documentation/README.md)
 - [Example controls and regeneration](Assets/AngularScope/Examples/README.md)
 - [PC VRChat avatar integration and animation fixtures](Assets/AngularScope/Documentation/AvatarIntegration.md)

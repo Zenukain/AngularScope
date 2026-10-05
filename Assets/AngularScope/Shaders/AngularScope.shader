@@ -9,17 +9,19 @@ Shader "AngularScope/Optical View"
     {
         _MainTex ("Scope View", 2D) = "black" {}
         _ReticleTex ("Reticle", 2D) = "white" {}
+        [Enum(ColorRGBA,0,AlphaMask,1,RedMask,2)] _ReticleTextureMode ("Reticle Texture Mode", Float) = 0
         _Color ("View Tint", Color) = (1,1,1,1)
         [HDR] _ReticleColor ("Reticle Color", Color) = (0.7,0,0.04,1)
         _EmissionPower ("Reticle Brightness", Range(0,10)) = 1.11
         _ReticleScale ("Reticle Size", Range(0.1,5)) = 0.278
         _ReticleOffset ("Reticle Offset", Vector) = (0,0,0,0)
         [Enum(SFP,0,FFP,1)] _ReticleFocalPlane ("Reticle Focal Plane", Float) = 0
-        _IlluminationTex ("Illumination Overlay (RGBA)", 2D) = "white" {}
+        _IlluminationTex ("Illumination Overlay", 2D) = "white" {}
+        [Enum(ColorRGBA,0,AlphaMask,1,RedMask,2)] _IlluminationTextureMode ("Illumination Texture Mode", Float) = 0
         [HDR] _IlluminationColor ("Illumination Overlay Color", Color) = (1,0,0,1)
         _IlluminationEmission ("Illumination Overlay Brightness", Range(0,10)) = 1
         _IlluminationOpacity ("Illumination Overlay Opacity (0 = Disabled)", Range(0,1)) = 0
-        _IlluminationScale ("Illumination Overlay Size", Range(0.1,5)) = 0.278
+        _IlluminationScale ("Illumination Overlay Size", Float) = 0.278
         _IlluminationOffset ("Illumination Overlay Offset", Vector) = (0,0,0,0)
         [Enum(SFP,0,FFP,1)] _IlluminationFocalPlane ("Illumination Overlay Focal Plane", Float) = 0
         _ReticleRefMagnification ("FFP Size Reference Magnification", Float) = 6
@@ -77,6 +79,7 @@ Shader "AngularScope/Optical View"
             float4 _IlluminationColor, _IlluminationOffset;
             float _ReticleFocalPlane, _IlluminationFocalPlane, _ReticleRefMagnification;
             float _IlluminationEmission, _IlluminationOpacity, _IlluminationScale;
+            float _ReticleTextureMode, _IlluminationTextureMode;
             float4 _AxisRight, _AxisUp, _AxisForward;
             float4 _LensCenter;
             float _ExitPupilRadius, _AxialVignette;
@@ -195,10 +198,14 @@ Shader "AngularScope/Optical View"
             }
 
             fixed4 SampleReticleLayer(sampler2D textureSampler, float2 projectionUV,
-                                     float scale, float2 offset)
+                                     float scale, float2 offset, float textureMode)
             {
                 float2 uv=(projectionUV-0.5)/max(scale,0.001)-offset+0.5;
                 fixed4 sample=tex2D(textureSampler,uv);
+                // Masks ignore stored RGB (including dark transparent borders).
+                // RedMask is the linear single-channel/BC4 path; alpha is unused.
+                if(textureMode>1.5) sample=fixed4(1,1,1,sample.r);
+                else if(textureMode>0.5) sample.rgb=1;
                 sample.a*=RectangleCoverage(uv);
                 return sample;
             }
@@ -218,14 +225,14 @@ Shader "AngularScope/Optical View"
                 #endif
                 fixed3 image=tex2D(_MainTex,imageUV).rgb*_Color.rgb;
                 fixed4 reticle=SampleReticleLayer(_ReticleTex,
-                    ReticleProjectionUV(slope,_ReticleFocalPlane),_ReticleScale,_ReticleOffset.xy);
+                    ReticleProjectionUV(slope,_ReticleFocalPlane),_ReticleScale,_ReticleOffset.xy,_ReticleTextureMode);
                 fixed3 composed=BlendReticle(image,reticle,_ReticleColor.rgb,_EmissionPower,1);
                 // Material-uniform condition; do not sample an unused overlay.
                 // Whether this saves GPU work depends on the target compiler.
                 if(_IlluminationOpacity>0)
                 {
                     fixed4 illumination=SampleReticleLayer(_IlluminationTex,
-                        ReticleProjectionUV(slope,_IlluminationFocalPlane),_IlluminationScale,_IlluminationOffset.xy);
+                        ReticleProjectionUV(slope,_IlluminationFocalPlane),_IlluminationScale,_IlluminationOffset.xy,_IlluminationTextureMode);
                     composed=BlendReticle(composed,illumination,_IlluminationColor.rgb,
                                           _IlluminationEmission,saturate(_IlluminationOpacity));
                 }
@@ -288,3 +295,4 @@ Shader "AngularScope/Optical View"
         }
     }
 }
+
