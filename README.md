@@ -80,7 +80,7 @@ its **Lens character** toggle enables a mild runtime comparison preset.
 
 Use the same `AngularScopeDemo.unity` scene as above.
 In Play mode, compare **Lens character** on/off and **Purple shadow fringe** on/off.
-The mild example uses distortion +0.04 / -0.005 at 1x / 6x, scene fringe 0.002,
+The mild example uses distortion +0.04 / -0.005 at 1x / 6x, scene fringe 0.004,
 and shadow fringe 0.012. Camera-coverage checks warn about edge clipping; changing
 coverage also requires matching camera FOV and zoom animations.
 

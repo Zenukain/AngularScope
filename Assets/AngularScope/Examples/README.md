@@ -92,7 +92,7 @@ into the same Example scene; they start off.
 In `Scenes/AngularScopeDemo.unity`, the on-screen **Lens character** toggle compares
 mild radial distortion and scene/eye-shadow colour fringe with zero. If the source
 material has no configured effects, the controller uses +0.04/-0.005 distortion,
-0.002 scene fringe and 0.012 shadow fringe as a runtime-only preset.
+0.004 scene fringe and 0.012 shadow fringe as a runtime-only preset.
 **Purple shadow fringe** compares the optional purple
 palette with the warm palette at the same 0.012 strength. Source material
 assets are not modified in Play mode.

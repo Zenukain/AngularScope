@@ -229,7 +229,7 @@ namespace AngularScope.Editor
                 draft.distortionLow=.04f;draft.distortionHigh=-.005f;
                 draft.distortionMinimum=draft.minimumMagnification;
                 draft.distortionMaximum=Mathf.Max(draft.maximumMagnification,draft.minimumMagnification+.001f);
-                draft.sceneColourFringe=.002f;draft.shadowColourFringe=.012f;draft.distortReticle=true;
+                draft.sceneColourFringe=.004f;draft.shadowColourFringe=.012f;draft.distortReticle=true;
                 status="Mild experimental values loaded into draft. Review coverage and Apply explicitly; headset validation is still needed.";
             }
             if(GUILayout.Button("Disable lens effects in draft"))

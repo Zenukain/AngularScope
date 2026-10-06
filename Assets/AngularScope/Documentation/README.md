@@ -329,7 +329,7 @@ The included editor-only material Inspector warns when the worst configured edge
 lookup exceeds camera coverage, but does not modify or block direct edits. Update
 the actual camera and zoom animations as well as the shader tangent. The default
 Warm is the default palette; Purple is optional. The mild preset uses distortion
-+0.04 / -0.005 at 1x / 6x, scene fringe 0.002 and shadow fringe 0.012.
++0.04 / -0.005 at 1x / 6x, scene fringe 0.004 and shadow fringe 0.012.
 
 ## Limits and validation
 

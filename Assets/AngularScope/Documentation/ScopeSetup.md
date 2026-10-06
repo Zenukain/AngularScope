@@ -112,7 +112,7 @@ edits the draft only. Review and Apply explicitly.
   This is a visual palette choice, not measured wavelength behaviour; it does not
   switch with eye distance. New materials default to Warm; reading an existing
   material retains its selected palette.
-- The mild draft uses +4% / -0.5% distortion, 0.2% scene fringe and 1.2% shadow fringe.
+- The mild draft uses +4% / -0.5% distortion, 0.4% scene fringe and 1.2% shadow fringe.
   These are experimental visual starting points, not measured lens specifications.
 
 Positive distortion and scene fringe require extra camera coverage. The tool checks

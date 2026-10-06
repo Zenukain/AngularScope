@@ -47,7 +47,7 @@ namespace AngularScope.Examples
             runtimeMaterial.name = originalMaterial.name + " (Demo Instance)";
             lensCharacter = ReadLensCharacter(runtimeMaterial);
             // A usable comparison preset without changing the source material.
-            if (lensCharacter == Vector4.zero) lensCharacter = new Vector4(.04f, -.005f, .002f, .012f);
+            if (lensCharacter == Vector4.zero) lensCharacter = new Vector4(.04f, -.005f, .004f, .012f);
             purpleShadowFringe=runtimeMaterial.GetFloat("_ShadowFringePalette")>.5f;
             originalHdr=imageCamera.allowHDR; originalMsaa=imageCamera.allowMSAA;
             runtimeTexture = new RenderTexture(originalTexture);
