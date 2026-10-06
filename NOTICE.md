@@ -9,7 +9,7 @@ to the extent of any copyright and related rights the owner holds.
 This includes permission to use, modify and redistribute those contributions,
 including commercially, without a project-imposed attribution requirement.
 
-See the unmodified legal text in `CC0-1.0.txt` and the official legal code:
+See the unmodified legal text in [LICENSE](LICENSE) and the official legal code:
 https://creativecommons.org/publicdomain/zero/1.0/legalcode.en
 
 This dedication does not cover purchased models, reticle images, textures,

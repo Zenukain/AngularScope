@@ -15,7 +15,7 @@ No proprietary scope package, Modular Avatar or lilToon is needed by the
 shader itself. Your scene-source camera and avatar integration are separate.
 
 Independently authored shader/documentation are dedicated under CC0-1.0;
-see LICENSE.md and CC0-1.0.txt. This does not relicense third-party assets,
+see [NOTICE.md](../NOTICE.md) and [LICENSE.txt](../LICENSE.txt). This does not relicense third-party assets,
 Unity's externally provided headers, or models/images you use with it.
 
 ## Platform and requirements

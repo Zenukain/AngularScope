@@ -125,4 +125,4 @@ A single mono scene texture cannot reproduce exact near-field binocular parallax
 
 ## License
 
-The independently authored shader, scripts, documentation, example meshes and textures are dedicated under **CC0-1.0**. See [LICENSE.md](LICENSE.md) and [the full dedication](CC0-1.0.txt). Unity and third-party components remain subject to their own terms.
+The independently authored shader, scripts, documentation, example meshes and textures are dedicated under **CC0-1.0**. See [the full dedication](LICENSE) and [scope and third-party notices](NOTICE.md). Unity and third-party components remain subject to their own terms.

@@ -18,7 +18,7 @@ namespace AngularScope.Editor
             Directory.CreateDirectory(output);
             const string root = "Assets/AngularScope";
             var shaderOnly = new[] {root + "/Shaders", root + "/LensTools", root + "/Documentation",
-                root + "/LICENSE.md", root + "/CC0-1.0.txt"};
+                root + "/NOTICE.md", root + "/LICENSE.txt"};
             foreach (var path in shaderOnly)
                 if (string.IsNullOrEmpty(AssetDatabase.AssetPathToGUID(path)))
                     throw new InvalidOperationException("Missing distribution asset: " + path);
