@@ -559,6 +559,10 @@ MonoBehaviour:
   firstFocalPlane: 0
   linkedExitPupil: 1
   showControls: 1
+  enableLensCharacter: 0
+  purpleShadowFringe: 0
+  hdrImage: 0
+  multisampleImage: 0
 --- !u!1 &6206982674555231575
 GameObject:
   m_ObjectHideFlags: 0

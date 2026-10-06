@@ -250,6 +250,8 @@ converts them to world lengths. `_EyeReliefMode` selects the units for BOTH
 
 - **WorldMetres (0):** uses fixed distances independent of object scale. A value
   of 0.12 stays 12 cm regardless of object scale.
+  Only relief and axial tolerance are fixed; pupil/objective radii still scale
+  with the lens. This mode does not freeze the entire eye-box geometry.
 - **LocalSpace (1, shader and supplied material default):** lengths use the same local
   object units as the lens centre. Forward-axis object-to-world scale converts
   them to world lengths. On a unit-scale MeshRenderer, 0.12 is 12 cm; at uniform
@@ -289,8 +291,8 @@ Restore 0 afterwards. View distance 2 helps detect wrong centre/unit settings.
 
 ## Optional distortion and colour fringe
 
-New materials and the base demo have zero effect strengths. The separate
-lens-effects demo enables a mild preset. Use the editor
+New materials have zero effect strengths. The Example starts with effects off;
+its Lens character toggle enables a mild runtime comparison preset. Use the editor
 [Scope Setup window](ScopeSetup.md#optional-lens-character) or these material controls:
 
 | Property | Meaning |
@@ -345,6 +347,24 @@ every VRChat photo/render path. See [Unity's depth documentation](https://docs.u
 The example RenderTexture uses a lightweight LDR, non-MSAA configuration.
 MSAA and HDR can improve particular scenes but increase memory/render cost;
 choose them for your target hardware rather than assuming they are free.
+
+### Optional RenderTexture quality settings
+
+Keep the default for a lightweight starting point. To compare higher quality,
+duplicate the RT first and assign the same copy to the image camera and `_MainTex`.
+
+- **Geometry antialiasing:** set RT Anti-Aliasing to 2x or 4x and enable the
+  image camera's Allow MSAA. This smooths covered geometry edges, not arbitrary
+  texture detail, reticle lines or temporal shimmer. Rendering-path support matters.
+- **HDR:** choose `R16G16B16A16_SFloat` / ARGBHalf and enable the image camera's
+  Allow HDR. A local Direct3D11 test preserved above-1 RGB through the scope shader;
+  LDR clipped those highlights. HDR does not automatically reproduce the viewer's
+  exposure, tone mapping or post effects: compare in your target scene/client.
+
+A 512-square ARGBHalf colour surface alone is 2 MiB. Depth, multisample storage,
+resolve surfaces and driver allocations are additional; this is not total RT cost.
+Compare fixed viewing positions before changing the shipped defaults. Neither
+setting changes optical magnification or requires new zoom-animation keys.
 
 The shader has editor compilation and render regression coverage. This is
 not a claim of validation on every headset, rig, Unity version or graphics API.

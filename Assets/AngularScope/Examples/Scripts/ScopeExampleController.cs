@@ -19,8 +19,10 @@ namespace AngularScope.Examples
         public bool firstFocalPlane;
         public bool linkedExitPupil = true;
         public bool showControls = true;
-        public bool enableLensCharacter = true;
+        public bool enableLensCharacter;
         public bool purpleShadowFringe;
+        public bool hdrImage;
+        public bool multisampleImage;
 
         Material originalMaterial;
         Material runtimeMaterial;
@@ -31,6 +33,7 @@ namespace AngularScope.Examples
         Quaternion initialViewerRotation;
         float initialViewerFov;
         Vector4 lensCharacter;
+        bool originalHdr, originalMsaa;
 
         void OnEnable()
         {
@@ -43,7 +46,10 @@ namespace AngularScope.Examples
             runtimeMaterial = new Material(originalMaterial);
             runtimeMaterial.name = originalMaterial.name + " (Demo Instance)";
             lensCharacter = ReadLensCharacter(runtimeMaterial);
+            // A usable comparison preset without changing the source material.
+            if (lensCharacter == Vector4.zero) lensCharacter = new Vector4(.04f, -.005f, .002f, .012f);
             purpleShadowFringe=runtimeMaterial.GetFloat("_ShadowFringePalette")>.5f;
+            originalHdr=imageCamera.allowHDR; originalMsaa=imageCamera.allowMSAA;
             runtimeTexture = new RenderTexture(originalTexture);
             runtimeTexture.name = originalTexture.name + " (Demo Instance)";
             runtimeTexture.Create();
@@ -65,6 +71,7 @@ namespace AngularScope.Examples
         public void ApplySettings()
         {
             if (!runtimeMaterial || !imageCamera) return;
+            ApplyImageQuality();
             magnification = Mathf.Clamp(magnification, 1, Mathf.Max(1, maximumMagnification));
             float tangent = Mathf.Max(runtimeMaterial.GetFloat("_TanHalfBaseFov"), 0.0001f);
             imageCamera.fieldOfView = 2 * Mathf.Atan(tangent / magnification) * Mathf.Rad2Deg;
@@ -76,6 +83,19 @@ namespace AngularScope.Examples
             runtimeMaterial.SetFloat("_ExitPupilMode", linkedExitPupil ? 1 : 0);
             ApplyLensCharacter(enableLensCharacter ? lensCharacter : Vector4.zero);
             runtimeMaterial.SetFloat("_ShadowFringePalette",purpleShadowFringe?1:0);
+        }
+
+        void ApplyImageQuality()
+        {
+            var format=hdrImage ? RenderTextureFormat.ARGBHalf : originalTexture.format;
+            int samples=multisampleImage ? 4 : 1;
+            if(runtimeTexture.format!=format || runtimeTexture.antiAliasing!=samples)
+            {
+                imageCamera.targetTexture=null;
+                runtimeTexture.Release();runtimeTexture.format=format;runtimeTexture.antiAliasing=samples;
+                runtimeTexture.Create();imageCamera.targetTexture=runtimeTexture;
+            }
+            imageCamera.allowHDR=hdrImage;imageCamera.allowMSAA=multisampleImage;
         }
 
         static Vector4 ReadLensCharacter(Material material)
@@ -131,7 +151,7 @@ namespace AngularScope.Examples
         void OnGUI()
         {
             if (!showControls || !runtimeMaterial) return;
-            GUILayout.BeginArea(new Rect(15, 15, 230, 365), GUI.skin.box);
+            GUILayout.BeginArea(new Rect(15, 15, 250, 420), GUI.skin.box);
             GUILayout.Label("AngularScope - Unity example");
             GUILayout.Label("Zoom: " + magnification.ToString("F2") + "x");
             magnification = GUILayout.HorizontalSlider(magnification, 1, Mathf.Max(1, maximumMagnification));
@@ -142,8 +162,10 @@ namespace AngularScope.Examples
             GUILayout.EndHorizontal();
             firstFocalPlane = GUILayout.Toggle(firstFocalPlane, "FFP reticle (off = SFP)");
             linkedExitPupil = GUILayout.Toggle(linkedExitPupil, "Magnification-linked exit pupil");
-            enableLensCharacter = GUILayout.Toggle(enableLensCharacter, "Lens character (if configured)");
+            enableLensCharacter = GUILayout.Toggle(enableLensCharacter, "Lens character");
             purpleShadowFringe = GUILayout.Toggle(purpleShadowFringe, "Purple shadow fringe (off = warm)");
+            hdrImage=GUILayout.Toggle(hdrImage,"HDR scene texture");
+            multisampleImage=GUILayout.Toggle(multisampleImage,"4x MSAA geometry edges");
             GUILayout.Label("A/D: eye left/right\nW/S: eye up/down\nQ/E: eye away/towards\nShift: faster movement\nH: hide/show this panel");
             if (viewer)
             {
@@ -161,6 +183,7 @@ namespace AngularScope.Examples
                 lensRenderer.sharedMaterial = originalMaterial;
             if (imageCamera && runtimeTexture && imageCamera.targetTexture == runtimeTexture)
                 imageCamera.targetTexture = originalTexture;
+            if (imageCamera && runtimeTexture) { imageCamera.allowHDR=originalHdr;imageCamera.allowMSAA=originalMsaa; }
             if (runtimeTexture) { runtimeTexture.Release(); Destroy(runtimeTexture); }
             if (runtimeMaterial) Destroy(runtimeMaterial);
             runtimeTexture = null;

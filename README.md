@@ -10,7 +10,7 @@ Built for Unity's **Built-in Render Pipeline on PC**, tested in Unity 2022.3.22f
 
 1. Download [AngularScope with the example](dist/AngularScope_WithExample.unitypackage) and import it into a Built-in RP Unity project.
 2. Open `Assets/AngularScope/Examples/Scenes/AngularScopeDemo.unity` and enter Play mode.
-3. Use the on-screen magnification and focal-plane controls. Move the eye with A/D, W/S and Q/E; R resets the view and V shows the model.
+3. Use the on-screen controls to compare magnification, focal planes, lens character, HDR and 4x MSAA. Move the eye with A/D, W/S and Q/E; R resets the view and V shows the model.
 
 For the shader, documentation and editor-only setup, lens conversion and mask tools,
 download [the smaller shader-only package](dist/AngularScope_ShaderOnly.unitypackage).
@@ -65,16 +65,11 @@ Two independent masks shape the view:
 
 Both 1x captures keep both masks enabled. Left: on axis at 9cm. Right: 12cm away, offset 7mm horizontally and vertically. The housing supplies the physical boundary. Exit-pupil size may follow zoom or remain fixed for a forgiving view; this affects the soft shadow, not the field stop.
 
-## Included example
-
-The scope housing, mount, checkerboard range, meshes and reticle textures are generated specifically for this example. No purchased scope or firearm assets are included.
-
-![Procedural example scope](docs/images/model.png)
-
 ## Lens distortion and chromatic aberration
 
-New in **v0.5.0**: optional lens character. New materials and the base demo have
-zero effect strengths; the separate lens-effects demo deliberately enables them.
+Optional lens character adds adjustable visual imperfections to the optical view.
+New materials have zero effect strengths. The Example starts with effects off;
+its **Lens character** toggle enables a mild runtime comparison preset.
 
 - **Radial distortion:** independently tune low/high-zoom coefficients for subtle
   barrel or pincushion character. Scene and reticle can share the distorted view;
@@ -83,17 +78,40 @@ zero effect strengths; the separate lens-effects demo deliberately enables them.
 - **Eye-box colour fringe:** warm or purple edging on the moving pupil shadow.
   These palettes are artistic choices, not measured lens prescriptions.
 
-Try `Assets/AngularScope/Examples/Scenes/AngularScopeLensEffectsDemo.unity`.
+Use the same `AngularScopeDemo.unity` scene as above.
 In Play mode, compare **Lens character** on/off and **Purple shadow fringe** on/off.
 The mild example uses distortion +0.04 / -0.005 at 1x / 6x, scene fringe 0.002,
 and shadow fringe 0.012. Camera-coverage checks warn about edge clipping; changing
 coverage also requires matching camera FOV and zoom animations.
 
-These are adjustable visual approximations, not a full physical lens simulation.
+| Effects off | Mild lens character |
+|---|---|
+| ![Example with lens effects disabled](docs/images/lens-character-off.png) | ![Example with mild distortion and chromatic aberration](docs/images/lens-character-on.png) |
+
+| Warm shadow fringe | Purple shadow fringe |
+|---|---|
+| ![Warm colour fringe on the eye-box shadow](docs/images/shadow-fringe-warm.png) | ![Purple colour fringe on the eye-box shadow](docs/images/shadow-fringe-purple.png) |
+
+Actual Example captures at 1x, with a fixed exit pupil. The palette comparison
+uses the same eye offset (13.5mm horizontally, 4mm vertically) and strength 0.012.
+The mild preset is intentionally subtle, especially with the eye centred.
+
+These are visual approximations, not a full physical lens simulation.
 Enabled scene fringe adds two texture lookups; no extra camera is created.
-Desktop rendering and clean-project import checks pass; user VR observations are
-positive, but universal XR/mirror compatibility and precise GPU overhead are not certified.
 See the [lens-character setup guide](Assets/AngularScope/Documentation/ScopeSetup.md#optional-lens-character).
+
+## Included example
+
+The scope housing, mount, checkerboard range, meshes and reticle textures are generated specifically for this example. No purchased scope or firearm assets are included.
+
+![Procedural example scope](docs/images/model.png)
+
+Lens character, HDR and 4x MSAA start disabled. All comparisons use temporary
+material/render-texture copies and restore the source settings on exit.
+HDR preserves bright scene values; MSAA smooths geometry edges, not reticle-texture
+aliasing. Neither enables a post-processing stack automatically. See
+[example controls](Assets/AngularScope/Examples/README.md) and
+[render-texture quality](Assets/AngularScope/Documentation/README.md#optional-rendertexture-quality-settings).
 
 ## Documentation
 

@@ -153,6 +153,25 @@ own Bool/menu toggle. Both clips write both properties, so zoom can return to 1x
 
 ## 6. Final checks and troubleshooting
 
+### Camera activation
+
+The included rig demonstrates zoom, not automatic camera activation. A simple
+integration can use the same scope on/off control to animate the source Camera's
+enabled flag (or its GameObject). Restore it on activation; do not leave an unused
+source camera rendering just because its lens is hidden.
+
+Stopping the camera can leave its last frame in the RT. If the housing stays
+visible, pair camera-off with a dedicated opaque dark lens material; `_Darkness`
+alone does not blank the valid scene/reticle. Restore the optical material when
+the camera is active. Check material swaps against existing zoom bindings.
+
+Local-only activation is optional: gate it with your avatar's `IsLocal` state only
+if remote viewing is intentionally disabled. Keep remote lenses dark rather than
+showing a stale RT. An eye-proximity contact can be added later, but needs its own
+reliable receiver/sender setup and activation thresholds; no contacts are supplied.
+
+### Troubleshooting
+
 - Black image: check camera enabled, assigned RT, same RT on material, camera
   culling mask, and whether VRChat safety settings permit the avatar camera.
 - Feedback: the camera is rendering the display that shows its own RT.

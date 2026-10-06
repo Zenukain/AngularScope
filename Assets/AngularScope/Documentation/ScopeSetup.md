@@ -126,8 +126,8 @@ coverage, including when multiple materials are selected. It never modifies sett
 or blocks manual edits. Setting a bigger material tangent alone does not update the
 real camera FOV or animation curves; use the connected Setup workflow for those.
 
-Check the grid in `Examples/Scenes/AngularScopeLensEffectsDemo.unity`: its on-screen
-Lens character toggle compares the configured effects with zero, and **Purple shadow
+Check the grid in `Examples/Scenes/AngularScopeDemo.unity`: its on-screen
+Lens character toggle compares a mild runtime preset with zero, and **Purple shadow
 fringe** compares palettes at the same strength, without editing
 source material assets. Check both eyes and your headset before choosing final values.
 

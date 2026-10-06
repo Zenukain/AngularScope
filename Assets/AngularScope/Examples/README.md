@@ -8,7 +8,8 @@ Unity's built-in primitive meshes/shaders remain external engine resources.
 
 1. Import AngularScope_WithExample.unitypackage into a PC Built-in RP project.
 2. Open Scenes/AngularScopeDemo.unity and press Play.
-3. Use the zoom slider or 1x/3x/Max buttons. Toggle FFP or linked pupil mode.
+3. Use the zoom slider or 1x/3x/Max buttons. Compare focal plane, linked pupil,
+   Lens character, Warm/Purple fringe and HDR/4x MSAA with the checkboxes.
 4. Click the Game view for keyboard focus: A/D shifts your eye sideways,
    W/S shifts up/down, Q moves away and E moves closer. Shift moves faster.
    R resets the eye; V switches between looking through and inspecting the
@@ -83,20 +84,24 @@ Run rebuilding only outside Play mode.
 
 Editor checks cover Play mode at 1x/3x/6x, independent cloned material/RT
 resources, both reticle layers and rendered close/overview views. These do not
-replace headset testing of your final rig. The base demo has no lens effects;
-the separate scene below provides optional aesthetic comparisons.
+replace headset testing of your final rig. Optional comparisons are integrated
+into the same Example scene; they start off.
 
 ## Optional lens character demo
 
-Open `Scenes/AngularScopeLensEffectsDemo.unity` to try mild radial distortion and
-scene/eye-shadow colour fringe. The on-screen **Lens character** toggle compares
-the configured values with zero. **Purple shadow fringe** compares the optional purple
+In `Scenes/AngularScopeDemo.unity`, the on-screen **Lens character** toggle compares
+mild radial distortion and scene/eye-shadow colour fringe with zero. If the source
+material has no configured effects, the controller uses +0.04/-0.005 distortion,
+0.002 scene fringe and 0.012 shadow fringe as a runtime-only preset.
+**Purple shadow fringe** compares the optional purple
 palette with the warm palette at the same 0.012 strength. Source material
 assets are not modified in Play mode.
 Use the grid, zoom slider, and eye movement controls for desktop tuning before VR.
 
-If the optional scene is absent, **Tools > AngularScope > Build Lens Character Example**
-creates a separate scene/material from the base demo; existing outputs are never overwritten.
-The base example remains unchanged. These settings are artistic approximations, not
-measured specifications from a particular real scope.
+**HDR scene texture** changes the cloned RT to ARGBHalf and enables camera HDR.
+**4x MSAA geometry edges** enables camera MSAA and four samples on the cloned RT.
+Neither toggle changes source assets; resources are restored when leaving Play mode.
+HDR/MSAA can cost more memory/render time and do not automatically fix tone mapping,
+reticle aliasing or temporal shimmer. See the shader guide's quality settings.
+Lens-character values are artistic approximations, not measured real-scope specifications.
 
