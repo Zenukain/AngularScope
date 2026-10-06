@@ -93,7 +93,7 @@ coverage also requires matching camera FOV and zoom animations.
 | ![Warm colour fringe on the eye-box shadow](docs/images/shadow-fringe-warm-retake.png) | ![Purple colour fringe on the eye-box shadow](docs/images/shadow-fringe-purple-retake.png) |
 
 Actual Example captures at 1x, with a fixed exit pupil. The palette comparison
-uses the same eye offset (12mm horizontally, 4mm vertically) and strength 0.012.
+uses the same eye offset (13.5mm horizontally, 4mm vertically) and strength 0.012.
 The mild preset is intentionally subtle, especially with the eye centred.
 
 These are visual approximations, not a full physical lens simulation.
