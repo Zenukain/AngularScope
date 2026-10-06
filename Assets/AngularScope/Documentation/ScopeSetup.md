@@ -54,6 +54,9 @@ An angular input supplies `tan(full_angle / 2)` instead. FOV uses one reference
 sample and assumes a constant apparent angular field. Real products may not have
 exactly inverse-zoom FOV; this tool does not fit arbitrary zoom-dependent specs.
 The visible field is not the camera overscan area or a physical lens aperture.
+These specification equations describe the undistorted projection. Optional
+lens distortion changes peripheral feature positions; they are not a measured
+fit of a real product's distorted visible field.
 
 ## Comfort and reticle size
 
@@ -71,7 +74,7 @@ The visible field is not the camera overscan area or a physical lens aperture.
 Axes and lens centre use rigid renderer local coordinates. Prefer positive
 uniform scale. Saved axial/radial reference scales convert physical distances to
 shader-local values. Recapturing reference size is explicit and keeps cm values.
-The WorldMetres option fixes relief distance; pupil geometry still scales with
+The WorldMetres option fixes relief distance and axial tolerance; pupil geometry still scales with
 the scope. Profiles retain their original reference scales: review on a new model.
 
 ## Zoom animation creation
@@ -79,7 +82,8 @@ the scope. Profiles retain their original reference scales: review on a new mode
 Select the actual animation root, e.g. the avatar root for FX bindings. The tool
 can create **three new clips**: low zoom, high zoom and a continuous one-second
 sweep. Camera FOV and material magnification are bound together. The sweep uses
-201 keys with linear tangents to approximate the nonlinear FOV curve.
+201 keys with linear tangents to approximate the nonlinear FOV curve. The bundled
+avatar example uses a separate 101-key sweep; both are sampled approximations.
 
 Existing files, FX controllers, menus and expression parameters are not changed.
 Apply matching base calibration to the material, then integrate the clips using
@@ -90,8 +94,9 @@ other material slots is supported, but their animation bindings need manual work
 ## Optional lens character
 
 Expand **Optional lens character** for independent distortion, scene colour fringe
-and moving-shadow colour fringe. All coefficients default to **0**; **Try mild lens
-character** edits the draft only. Review and Apply explicitly.
+and moving-shadow colour fringe. A fresh setup starts with zero strengths;
+reading a material preserves its existing effects. **Try mild lens character**
+edits the draft only. Review and Apply explicitly.
 
 - Distortion is an inverse radial lookup, normalized to the apparent field radius.
   Positive coefficients give barrel distortion; negative give pincushion. The low
@@ -100,11 +105,13 @@ character** edits the draft only. Review and Apply explicitly.
 - The reticle toggle applies the same geometric lookup to **both** reticle layers,
   before their independent SFP/FFP projections. Off leaves both reticles undistorted.
   This is an artistic choice, not an exact optical prescription for either focal plane.
-- Scene fringe separates the R/B image lookup radially, growing with squared field
-  radius. Shadow fringe changes channel-dependent pupil radii. Neither changes the fixed field stop.
-- Shadow colour can be **Warm** (original R/G/B ordering) or **Purple** (R+B outside G).
+- Scene fringe offsets R/B radially: a radius-squared factor multiplies the lookup
+  slope, so displacement grows roughly cubically toward the edge. Shadow fringe
+  changes channel-dependent pupil radii. Neither changes the fixed field stop.
+- Shadow colour can be **Warm** (R outside G outside B) or **Purple** (R+B outside G).
   This is a visual palette choice, not measured wavelength behaviour; it does not
-  switch with eye distance. The default remains Warm for existing materials.
+  switch with eye distance. New materials default to Warm; reading an existing
+  material retains its selected palette.
 - The mild draft uses +4% / -0.5% distortion, 0.2% scene fringe and 1.2% shadow fringe.
   These are experimental visual starting points, not measured lens specifications.
 

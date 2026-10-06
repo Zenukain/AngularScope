@@ -45,8 +45,10 @@ Meshes, reticle Texture2D assets, materials and RT are saved under this folder.
 Start with the prefab and replace only housing geometry. Keep the optical
 objects intact first, then calibrate your mesh's centre/axes/pupil sizes as
 described in Assets/AngularScope/Documentation/README.md.
-Parent the complete scope root under a rigid animated transform. Avoid
-nonuniform scale; resizing needs recalibration and eye relief is world metres.
+Parent the complete scope root under a rigid animated transform. Prefer positive
+uniform scale. The supplied material uses LocalSpace eye relief: scaling the
+whole rig scales relief, axial tolerance and pupil radii together. If changing
+the mesh or scaling only selected parts, recalibrate centre and physical distances.
 
 At runtime the controller creates per-instance material and RT copies, so
 two prefab instances do not overwrite the same camera image. When removing
@@ -83,12 +85,13 @@ Editor checks cover Play mode at 1x/3x/6x, independent cloned material/RT
 resources, both reticle layers and rendered close/overview views. These do not
 replace headset testing of your final rig. The base demo has no lens effects;
 the separate scene below provides optional aesthetic comparisons.
+
 ## Optional lens character demo
 
 Open `Scenes/AngularScopeLensEffectsDemo.unity` to try mild radial distortion and
 scene/eye-shadow colour fringe. The on-screen **Lens character** toggle compares
 the configured values with zero. **Purple shadow fringe** compares the optional purple
-palette with the original warm palette at the same 0.012 strength. Source material
+palette with the warm palette at the same 0.012 strength. Source material
 assets are not modified in Play mode.
 Use the grid, zoom slider, and eye movement controls for desktop tuning before VR.
 

@@ -95,8 +95,15 @@ material._TanHalfBaseFov = 0.17 (constant)
 parameter. If you change it, regenerate/recalculate all FOV keys. Reticle size,
 reference magnification, SFP/FFP selection and exit-pupil mode are separate settings.
 
-The sweep has 101 keys with linear interpolation. This approximates the analytic
-FOV curve, while magnification itself increases linearly. Do not simply blend
+Optional distortion and scene colour fringe need camera overscan. The supplied
+clips use the base demo's 0.17 tangent; they do not adapt to arbitrary effect
+settings. Check coverage in [Scope Setup](ScopeSetup.md#optional-lens-character)
+and regenerate matching FOV/magnification clips if the required tangent changes.
+Effects themselves are material settings and need no avatar runtime script.
+
+The supplied sweep has 101 keys with linear interpolation; Scope Setup generates
+201-key sweeps. Both approximate the analytic FOV curve, while magnification
+itself increases linearly. Do not simply blend
 the two endpoint clips for continuous zoom: linear interpolation of FOV degrees
 does not produce the intended intermediate magnification.
 

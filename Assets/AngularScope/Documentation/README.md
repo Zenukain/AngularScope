@@ -6,8 +6,8 @@ Tested editor: Unity 2022.3.22f1, PC rendering.
 
 ## Package and license
 
-The ShaderOnly package includes shader source, an optional editor-only rigid-lens
-conversion tool, documentation and CC0 license files, with no model, texture,
+The ShaderOnly package includes shader source, editor-only setup, rigid-lens
+conversion and mask tools, documentation and CC0 license files, with no model, texture,
 camera or animation assets. The WithExample
 package additionally includes procedural fixtures and animation-driven zoom.
 See [PC avatar integration](AvatarIntegration.md) for the integration workflow.
@@ -20,9 +20,9 @@ Unity's externally provided headers, or models/images you use with it.
 
 ## Platform and requirements
 
-Use a PC Built-in Render Pipeline project. VRChat PC avatars are the intended
-integration target. This is NOT a Quest/Android avatar shader. URP/HDRP
-compatibility has not been established. Stereo macros are present, but one
+Use a PC Built-in Render Pipeline project. VRChat PC avatars are one intended
+integration use case; the shader is not avatar-only. Quest/Android avatar shaders,
+URP and HDRP are not supported by this package. Stereo macros are present, but one
 mono camera texture cannot reproduce exact near-field binocular parallax.
 
 Required display structure: a normal MeshRenderer on a rigid lens mesh,
@@ -76,7 +76,8 @@ The scene camera's extra rendering can dominate total performance cost.
 
 ## Projection and coverage
 
-Image projection uses _TanHalfBaseFov (default 0.17). Minimum camera FOV is
+Image projection uses _TanHalfBaseFov (default 0.17), the camera half-angle tangent
+at **1x**, even for a scope whose zoom range starts above 1x. Camera FOV at 1x is
 2*atan(0.17) = 19.296091 degrees; at 6x it is 3.245893 degrees.
 Keep _FieldTanHalfAngle (default 0.16) smaller than the camera tangent coverage.
 If a fixed black ring intrudes at the best eye position, increase the field
@@ -103,15 +104,16 @@ white-on-transparent images, tint the main black (0,0,0), tint the illumination 
 and enable its opacity. Black multiplied by brightness remains black.
 This approximates etched-line contrast through image composition; it does
 not simulate scattering or absorption in illuminated glass.
-Texture alpha defines both layers' coverage. Overlay opacity adds a strength
-control; tint color alpha is not used. The illumination overlay is composited over the reticle.
+In ColorRGBA and AlphaMask modes, texture alpha defines coverage; RedMask uses
+the red channel instead. Overlay opacity adds a strength control; tint color
+alpha is not used. The illumination overlay is composited over the reticle.
 
 ### Texture modes and lightweight 4K masks
 
 Each layer has its own texture mode (`_ReticleTextureMode` /
 `_IlluminationTextureMode`):
 
-- **ColorRGBA (0, compatibility-preserving default):** texture RGB supplies
+- **ColorRGBA (0, default):** texture RGB supplies
   colour and alpha supplies coverage; material tint/brightness still apply.
 - **AlphaMask (1):** PNG alpha supplies coverage; stored RGB is ignored.
   Recommended for monochrome PNG art, avoiding dark RGB fringes around illumination.
@@ -248,7 +250,7 @@ converts them to world lengths. `_EyeReliefMode` selects the units for BOTH
 
 - **WorldMetres (0):** uses fixed distances independent of object scale. A value
   of 0.12 stays 12 cm regardless of object scale.
-- **LocalSpace (1, shader default and both supplied example presets):** lengths use the same local
+- **LocalSpace (1, shader and supplied material default):** lengths use the same local
   object units as the lens centre. Forward-axis object-to-world scale converts
   them to world lengths. On a unit-scale MeshRenderer, 0.12 is 12 cm; at uniform
   scale 2 it becomes 24 cm, and the axial tolerance scales with it.
@@ -287,7 +289,8 @@ Restore 0 afterwards. View distance 2 helps detect wrong centre/unit settings.
 
 ## Optional distortion and colour fringe
 
-All effects default to zero, preserving the original view. Use the editor
+New materials and the base demo have zero effect strengths. The separate
+lens-effects demo enables a mild preset. Use the editor
 [Scope Setup window](ScopeSetup.md#optional-lens-character) or these material controls:
 
 | Property | Meaning |
@@ -297,7 +300,7 @@ All effects default to zero, preserving the original view. Use the editor
 | `_DistortReticle` | Apply the geometric distortion to both reticle layers, before SFP/FFP scaling |
 | `_SceneChromaticAberration` | R/B radial image lookup offset fraction at the field edge; 0–0.02 |
 | `_ShadowChromaticAberration` | Channel-dependent pupil-radius offset fraction; 0–0.05 |
-| `_ShadowFringePalette` | 0 Warm (original channel ordering), 1 Purple (R+B outside G); artistic palette choice |
+| `_ShadowFringePalette` | 0 Warm (R outside G outside B), 1 Purple (R+B outside G); artistic palette choice |
 
 Image distortion uses `sampleSlope = slope * (1 + k * normalizedRadiusSquared)`.
 The field-stop and empirical pupil geometry use the original slope, so lens
@@ -305,6 +308,11 @@ character does not alter those masks or introduce an aim offset at the centre.
 Colour fringe is a stylized RGB approximation, not wavelength raytracing. The
 reticle gets geometric distortion when enabled, but not scene RGB separation.
 Shadow colour fringe affects the composed scene **and** reticle near the pupil edge.
+The scene-fringe value is the R/B lookup scale offset at the field edge,
+relative to the geometrically distorted slope. It scales that slope by a radius-squared factor:
+displacement grows roughly cubically with field radius, not linearly. Shadow
+fringe strength is fixed; eye position changes the existing shadow geometry,
+not the palette or an additional distance-dependent colour multiplier.
 
 Scene colour fringe adds two RT texture lookups when enabled; shadow colour fringe
 evaluates three edge coverages instead of one, reusing pupil geometry. Material-uniform
@@ -318,8 +326,8 @@ claim of matching any particular real scope.
 The included editor-only material Inspector warns when the worst configured edge
 lookup exceeds camera coverage, but does not modify or block direct edits. Update
 the actual camera and zoom animations as well as the shader tangent. The default
-Warm palette is preserved; Purple is optional, and no eye-distance colour inversion
-is implemented. The mild preset shadow strength is 0.012, not 0.02.
+Warm is the default palette; Purple is optional. The mild preset uses distortion
++0.04 / -0.005 at 1x / 6x, scene fringe 0.002 and shadow fringe 0.012.
 
 ## Limits and validation
 
