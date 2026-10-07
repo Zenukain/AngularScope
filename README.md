@@ -16,6 +16,11 @@ For the shader, documentation and editor-only setup, lens conversion and mask to
 download [the smaller shader-only package](dist/AngularScope_ShaderOnly.unitypackage).
 It contains no example models, textures, cameras or animation assets.
 
+The lens material inspector groups scene/zoom, reticle, illumination, field/eyebox,
+lens character and advanced calibration into collapsible sections. Start with
+**Tools > AngularScope > Scope Setup** for calibration; use the material inspector
+for direct fine-tuning. It does not automatically update camera FOV or zoom clips.
+
 The shader **requires a separate camera and RenderTexture**. **PC VRChat avatars can use it, not just worlds.** For avatars, use the included animation-driven rig instead of the scripted demo; it supplies endpoint clips and a continuous zoom curve, not an automatic installer. Follow the [avatar integration guide](Assets/AngularScope/Documentation/AvatarIntegration.md).
 
 The optical display must be a **rigid MeshRenderer**, optionally attached to a

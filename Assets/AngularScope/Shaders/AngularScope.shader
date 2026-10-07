@@ -43,7 +43,7 @@ Shader "AngularScope/Optical View"
         _EyeReliefDist ("Eye Relief (Selected Units)", Range(0,0.5)) = 0.12
         _EyeReliefTol ("Axial Vignetting Dead Zone", Range(0,0.2)) = 0.01
         _Darkness ("Outside View Brightness", Range(0,1)) = 0
-        [Header(Optional Lens Character)] _DistortionLow ("Low-Zoom Distortion (+ Barrel / - Pincushion)", Range(-0.15,0.15)) = 0
+        _DistortionLow ("Low-Zoom Distortion (+ Barrel / - Pincushion)", Range(-0.15,0.15)) = 0
         _DistortionHigh ("High-Zoom Distortion (+ Barrel / - Pincushion)", Range(-0.15,0.15)) = 0
         _DistortionMinMagnification ("Distortion Low-Zoom Reference", Float) = 1
         _DistortionMaxMagnification ("Distortion High-Zoom Reference", Float) = 6
