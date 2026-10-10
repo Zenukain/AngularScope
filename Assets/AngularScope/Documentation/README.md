@@ -90,6 +90,25 @@ product. There is no extra lens-aperture mask or whole-image distance fade.
 _OpticalShadowSoftness controls the moving edge; _PupilFieldCoupling and
 _AxialVignette are empirical tuning controls, not physical lens prescriptions.
 
+### Optional near-eye lateral sensitivity
+
+`_NearEyeSensitivity` defaults to **0** (existing behaviour). A positive value
+amplifies sideways and vertical eye displacement only when the eye is closer
+than `eye relief - axial tolerance`. It does not add near-distance error to the
+field shear, so the perfectly centred view stays unchanged; the rearward tunnel
+response is also unchanged. Begin with **1** for testing, not as a measured
+real-scope prescription. Linked exit pupils may make high zoom much less forgiving.
+
+This is an empirical handling option, not a complete near-side optical model.
+The lateral gain is `1 + nearError/lensDepth * strength`, capped at **8x** for
+stability near the lens plane. Strength is limited to 0–4. LocalSpace relief
+scales both the relief and tolerance as usual; WorldMetres fixes axial distances
+only. No extra fade, coverage mask or chromatic effect is added. The field
+boundary remains sharp, and centred close-eye viewing still exposes the field
+stop inside the housing. Test horizontal and vertical movement in a headset
+before choosing a production value. Configure it in the material's Field &
+eyebox section or Scope Setup's advanced controls.
+
 ## Reticle and illumination overlay
 
 Reticle layer: _ReticleTex, _ReticleColor, _EmissionPower, _ReticleScale,
@@ -108,10 +127,52 @@ In ColorRGBA and AlphaMask modes, texture alpha defines coverage; RedMask uses
 the red channel instead. Overlay opacity adds a strength control; tint color
 alpha is not used. The illumination overlay is composited over the reticle.
 
+### Optional central reticle detail
+
+This advanced option replaces a rectangular part of the main reticle with a
+higher-density crop. It is **not** a second complete reticle or a zoom-triggered
+texture swap. The illumination overlay remains independent and draws last.
+
+1. Prepare a lower-resolution full reticle and a matching, more detailed crop
+   from the same master artwork. Merely enlarging the low-resolution image does
+   not recover detail. Export the exact crop canvas, including transparent gaps.
+2. In the lens material's **Central reticle detail · optional** foldout, assign
+   `_ReticleDetailTex` and choose its texture mode. Set Clamp, mipmaps and
+   Trilinear filtering; RedMask/BC4 data must be linear, just like the base mask.
+3. Set `_ReticleDetailRegion = (centreU, centreV, width, height)` in the **base
+   texture's normalized, bottom-left-origin UV coordinates**. For the central
+   quarter of each dimension, use `(0.5, 0.5, 0.25, 0.25)`. Non-square crops are
+   supported; keep the entire region inside UV 0–1. For a top-origin crop,
+   `centreV = 1 - (top + cropHeight/2)/masterHeight`.
+4. Enable `_ReticleDetailEnabled` after calibration. It defaults to **0**, so
+   existing materials and 4K workflows keep their original view. Leave it off
+   when no detail image is assigned; enabling an empty image can erase marks.
+5. `_ReticleDetailFeather` blends inward at the crop boundary (0.05 = 5% of crop
+   width/height). Zero still uses derivative antialiasing. Check alignment and
+   line weight at the seam at both minimum and maximum zoom.
+
+Detail inherits the main reticle's size, offset, tint, brightness, focal plane
+and FFP reference. There is no second reference magnification to reconcile.
+Base, detail and the replacement boundary share **one inverse-distorted lookup**,
+equivalent to warping the composite reticle, not separately distorting the crop.
+Inside the replacement region, transparent detail pixels show the scene rather
+than the old blurry base line. The boundary crossfades the two completed reticle
+views; mismatched artwork or filtering can still produce a visible seam.
+
+Both textures occupy memory even when one is not sampled. The saving comes from
+concentrating detail into a small crop, not unloading textures at different zooms.
+For example, a 2K BC4 base plus 1K BC4 detail uses about **3.33 MiB** with mipmaps
+(illumination excluded), versus 10.67 MiB for a 4K BC4 base. A 1K crop covering
+the central quarter has the same nominal texel density there as a full 4K image;
+its border transition still includes the base. This does not guarantee subpixel
+line visibility. Enabled detail adds one texture lookup and blending; GPU cost
+has not been benchmarked. Scope Setup preserves these material settings but does
+not author the crop; use the material inspector for this advanced option.
+
 ### Texture modes and lightweight 4K masks
 
 Each layer has its own texture mode (`_ReticleTextureMode` /
-`_IlluminationTextureMode`):
+`_IlluminationTextureMode` / `_ReticleDetailTextureMode`):
 
 - **ColorRGBA (0, default):** texture RGB supplies
   colour and alpha supplies coverage; material tint/brightness still apply.

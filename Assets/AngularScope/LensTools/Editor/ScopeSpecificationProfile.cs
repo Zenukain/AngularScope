@@ -19,6 +19,7 @@ namespace AngularScope.Editor
         public bool followScale = true, linkedPupil = true;
         public float pupilRadiusCm = 1.875f, effectiveObjectiveRadiusCm = 1.2f, farDeadZoneCm = 1;
         public float shadowSoftness = .12f, shadowCoupling = .25f, farTightening = 4;
+        public float nearEyeSensitivity;
         // Cardinal texture edge matches the default undistorted field radius.
         public float reticleSize = .16f/.5773503f, illuminationSize = .278f, reticleReference = 6;
         public bool reticleFFP, illuminationFFP;
@@ -46,7 +47,7 @@ namespace AngularScope.Editor
             foreach(var v in new[]{minimumMagnification,maximumMagnification,previewMagnification,
                 objectiveDiameterMm,physicalSizeRatio,eyeReliefCm,fieldWidthMetres,fieldDistanceMetres,
                 fieldAtMagnification,fieldFullAngleDegrees,cameraOverscan,fieldTangent,cameraBaseTangent,
-                pupilRadiusCm,effectiveObjectiveRadiusCm,farDeadZoneCm,shadowSoftness,shadowCoupling,farTightening,
+                pupilRadiusCm,effectiveObjectiveRadiusCm,farDeadZoneCm,shadowSoftness,shadowCoupling,farTightening,nearEyeSensitivity,
                 reticleSize,illuminationSize,reticleReference,referenceAxialScale,referenceRadialScale,
                 lensCentre.x,lensCentre.y,lensCentre.z,right.x,right.y,right.z,up.x,up.y,up.z,forward.x,forward.y,forward.z,
                 reticleOffset.x,reticleOffset.y,illuminationOffset.x,illuminationOffset.y,
@@ -63,7 +64,7 @@ namespace AngularScope.Editor
                 return "Specification values must be positive, FOV must be measured within the zoom range, and overscan must exceed 1.";
             if(ApparentFieldTangent<=0 || BaseCameraTangent<=ApparentFieldTangent || BaseCameraTangent>10)
                 return "The camera must cover a little more than the visible field; check FOV and overscan.";
-            if(shadowSoftness<.01f||shadowSoftness>.4f||shadowCoupling<.05f||shadowCoupling>1||farTightening<1||farTightening>8)
+            if(shadowSoftness<.01f||shadowSoftness>.4f||shadowCoupling<.05f||shadowCoupling>1||farTightening<1||farTightening>8||nearEyeSensitivity<0||nearEyeSensitivity>4)
                 return "Shadow tuning is outside the shader's supported ranges.";
             if(reticleSize<.001f || illuminationSize<.001f || reticleReference<=0) return "Reticle sizes/reference must be positive (size >= .001).";
             if(Mathf.Abs(distortionLow)>.15f || Mathf.Abs(distortionHigh)>.15f ||

@@ -65,6 +65,10 @@ fit of a real product's distorted visible field.
 - Larger **extra rearward tolerance** postpones added tunnel shading. There is
   no matching near-distance cutoff in the current shader model.
 - Higher **shadow softness** softens the edge, rather than enlarging the pupil.
+- Advanced **Near-eye lateral sensitivity** defaults to 0. Try 1 to make
+  lateral eye movement more sensitive when closer than relief minus tolerance,
+  without adding centred near-distance narrowing. This is empirical; gain is
+  capped at 8x. Check in a headset before enabling it on a production scope.
 - **Reticle size** remains independent of FOV. The optional fit button updates
   only the draft size to align texture bounds at SFP / FFP reference zoom. Ink
   margins, offsets and cropped illumination still require deliberate alignment.

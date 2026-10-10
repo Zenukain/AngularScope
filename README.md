@@ -51,6 +51,10 @@ Only the reference changes to `1` below: reticle and camera settings are unchang
 
 The black etched cross and red illuminated centre are independent texture layers.
 
+Advanced users can optionally replace a central portion of the main reticle
+with a matching higher-density crop, sharing its focal plane and distortion.
+Existing materials keep this disabled. See [central reticle detail](Assets/AngularScope/Documentation/README.md#optional-central-reticle-detail).
+
 Monochrome art can use AlphaMask or a lightweight linear RedMask (BC4), independently
 for each layer. The included editor conversion tool preserves original PNG dimensions,
 including 4K, without altering the source. A 4K BC4 main mask plus a cropped 512 centre

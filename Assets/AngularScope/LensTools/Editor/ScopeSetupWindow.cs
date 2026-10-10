@@ -203,6 +203,7 @@ namespace AngularScope.Editor
             }
             draft.shadowCoupling=EditorGUILayout.Slider(Label("Lateral shadow sweep","Controls the stylized sweep response. Not a measured optical prescription."),draft.shadowCoupling,.05f,1);
             draft.farTightening=EditorGUILayout.Slider(Label("Far-distance tunnel strength","Higher = stronger narrowing after the rearward tolerance."),draft.farTightening,1,8);
+            draft.nearEyeSensitivity=EditorGUILayout.Slider(Label("Near-eye lateral sensitivity","Optional empirical response. 0 preserves the old view; higher makes sideways/upward eye offsets more sensitive when closer than relief minus tolerance. Centred coverage is unchanged; lateral gain is capped at 8x."),draft.nearEyeSensitivity,0,4);
             draft.lensCentre=EditorGUILayout.Vector3Field("Rear lens centre (local)",draft.lensCentre);
             draft.right=EditorGUILayout.Vector3Field("Optical right axis (local)",draft.right);
             draft.up=EditorGUILayout.Vector3Field("Optical up axis (local)",draft.up);
@@ -271,6 +272,7 @@ namespace AngularScope.Editor
             s.fieldInput=ScopeFieldInput.FullAngleDegrees;s.fieldFullAngleDegrees=2*Mathf.Atan(s.fieldTangent)*Mathf.Rad2Deg;
             s.linkedPupil=m.GetFloat("_ExitPupilMode")>.5f;
             s.shadowSoftness=m.GetFloat("_OpticalShadowSoftness");s.shadowCoupling=m.GetFloat("_PupilFieldCoupling");s.farTightening=m.GetFloat("_AxialVignette");
+            s.nearEyeSensitivity=m.HasProperty("_NearEyeSensitivity")?m.GetFloat("_NearEyeSensitivity"):0;
             s.reticleSize=m.GetFloat("_ReticleScale");s.illuminationSize=m.GetFloat("_IlluminationScale");
             s.reticleFFP=m.GetFloat("_ReticleFocalPlane")>.5f;s.illuminationFFP=m.GetFloat("_IlluminationFocalPlane")>.5f;
             s.reticleReference=m.GetFloat("_ReticleRefMagnification");s.reticleOffset=m.GetVector("_ReticleOffset");s.illuminationOffset=m.GetVector("_IlluminationOffset");
@@ -289,6 +291,7 @@ namespace AngularScope.Editor
             return new Dictionary<string,float>{
                 {"_EyeReliefMode",s.followScale?1:0},{"_EyeReliefDist",s.ReferenceReliefMetres/(s.followScale?s.referenceAxialScale:1)},
                 {"_EyeReliefTol",s.farDeadZoneCm*.01f/(s.followScale?s.referenceAxialScale:1)},
+                {"_NearEyeSensitivity",s.nearEyeSensitivity},
                 {"_ExitPupilRadius",s.pupilRadiusCm*.01f/s.referenceRadialScale},{"_ObjectiveRadius",s.LocalObjectiveRadius},
                 {"_ExitPupilMode",s.linkedPupil?1:0},{"_OpticalShadowSoftness",s.shadowSoftness},
                 {"_PupilFieldCoupling",s.shadowCoupling},{"_AxialVignette",s.farTightening},

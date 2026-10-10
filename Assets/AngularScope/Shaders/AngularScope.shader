@@ -16,6 +16,11 @@ Shader "AngularScope/Optical View"
         _ReticleScale ("Reticle Size", Range(0.1,5)) = 0.2771281
         _ReticleOffset ("Reticle Offset", Vector) = (0,0,0,0)
         [Enum(SFP,0,FFP,1)] _ReticleFocalPlane ("Reticle Focal Plane", Float) = 0
+        [Toggle] _ReticleDetailEnabled ("Enable Central Reticle Detail", Float) = 0
+        _ReticleDetailTex ("Central Reticle Detail", 2D) = "black" {}
+        [Enum(ColorRGBA,0,AlphaMask,1,RedMask,2)] _ReticleDetailTextureMode ("Detail Texture Mode", Float) = 0
+        _ReticleDetailRegion ("Detail Region (Centre UV, Width, Height)", Vector) = (0.5,0.5,0.25,0.25)
+        _ReticleDetailFeather ("Detail Edge Blend (Fraction of Crop Size)", Range(0,0.25)) = 0.05
         _IlluminationTex ("Illumination Overlay", 2D) = "white" {}
         [Enum(ColorRGBA,0,AlphaMask,1,RedMask,2)] _IlluminationTextureMode ("Illumination Texture Mode", Float) = 0
         [HDR] _IlluminationColor ("Illumination Overlay Color", Color) = (1,0,0,1)
@@ -36,6 +41,7 @@ Shader "AngularScope/Optical View"
         _ObjectiveRadius ("Local Effective Objective Radius", Float) = 0.012
         _ExitPupilRadius ("Local Fixed / Maximum Exit Pupil Radius", Float) = 0.01875
         _AxialVignette ("Axial Vignetting Strength", Range(1,8)) = 4
+        _NearEyeSensitivity ("Near-Eye Lateral Sensitivity (0 = Disabled)", Range(0,4)) = 0
         _FieldTanHalfAngle ("Optical Field Radius (tan half angle)", Range(0.05,0.5)) = 0.16
         _OpticalShadowSoftness ("Moving Shadow Edge Softness", Range(0.01,0.4)) = 0.12
         _PupilFieldCoupling ("Moving Shadow Field Coupling", Range(0.05,1)) = 0.25
@@ -47,7 +53,7 @@ Shader "AngularScope/Optical View"
         _DistortionHigh ("High-Zoom Distortion (+ Barrel / - Pincushion)", Range(-0.15,0.15)) = 0
         _DistortionMinMagnification ("Distortion Low-Zoom Reference", Float) = 1
         _DistortionMaxMagnification ("Distortion High-Zoom Reference", Float) = 6
-        [Toggle] _DistortReticle ("Apply Distortion to Both Reticle Layers", Float) = 1
+        [Toggle] _DistortReticle ("Apply Distortion to Reticle and Illumination", Float) = 1
         _SceneChromaticAberration ("Scene Colour Fringe (Field-Edge Fraction)", Range(0,0.02)) = 0
         _ShadowChromaticAberration ("Eye-Shadow Colour Fringe (Radius Fraction)", Range(0,0.05)) = 0
         [Enum(Warm,0,Purple,1)] _ShadowFringePalette ("Eye-Shadow Fringe Palette (Stylized)", Float) = 0
@@ -83,6 +89,9 @@ Shader "AngularScope/Optical View"
             // View and reticle composition. Keep these property names stable:
             // materials and existing animations depend on the serialized ABI.
             sampler2D _MainTex, _ReticleTex, _IlluminationTex;
+            sampler2D _ReticleDetailTex;
+            float4 _ReticleDetailRegion;
+            float _ReticleDetailEnabled, _ReticleDetailTextureMode, _ReticleDetailFeather;
             float4 _MainTex_TexelSize;
             float4 _Color, _ReticleColor, _ReticleOffset;
             float4 _IlluminationColor, _IlluminationOffset;
@@ -92,6 +101,7 @@ Shader "AngularScope/Optical View"
             float4 _AxisRight, _AxisUp, _AxisForward;
             float4 _LensCenter;
             float _ExitPupilRadius, _AxialVignette;
+            float _NearEyeSensitivity;
             float _ExitPupilMode, _Magnification, _ObjectiveRadius;
             float _FieldTanHalfAngle, _OpticalShadowSoftness, _PupilFieldCoupling;
             float _EmissionPower, _ReticleScale, _TanHalfBaseFov, _ReticleTanHalfFov;
@@ -176,7 +186,7 @@ Shader "AngularScope/Optical View"
                                     float lensDepth, float radialScale, float axialScale)
             {
                 // Empirical eye-shadow model, not a physical exit-pupil raytrace.
-                // Closer eye positions do not contract the soft shadow.
+                // Closer eye positions do not contract the centred soft shadow.
                 // Mode 0 uses fixed world distances, independent of object scale.
                 // Mode 1 converts BOTH local distance and tolerance using the
                 // forward-axis scale of a rigid MeshRenderer. Skinned optical
@@ -192,6 +202,15 @@ Shader "AngularScope/Optical View"
                 // preserves its normalized centred-eye coverage at each zoom.
                 if(_ExitPupilMode>=0.5)
                     coupling*=pupilRadius/PupilShadowReferenceRadius;
+                if(_NearEyeSensitivity>0)
+                {
+                    // Optional empirical lateral gain, not a physical pupil model.
+                    // Do NOT add nearError to coupling: that narrows the centred
+                    // field too. At zero eyeOffset this leaves the old mask intact.
+                    float nearError=max(0,(_EyeReliefDist-_EyeReliefTol)*reliefScale-lensDepth);
+                    float extra=min(7,nearError/max(lensDepth,0.00001)*clamp(_NearEyeSensitivity,0,4));
+                    eyeOffset*=1+extra; // Bounded 1–8x gain close to the lens plane.
+                }
                 float2 pupilXY=eyeOffset+lensXY*coupling;
                 float radius=length(pupilXY)/max(pupilRadius*radialScale,0.000001);
                 return radius;
@@ -259,10 +278,13 @@ Shader "AngularScope/Optical View"
                 return 0.5+slope*projectionScale/(2*max(_ReticleTanHalfFov,0.0001));
             }
 
-            fixed4 SampleReticleLayer(sampler2D textureSampler, float2 projectionUV,
-                                     float scale, float2 offset, float textureMode)
+            float2 ReticleTextureUV(float2 projectionUV, float scale, float2 offset)
             {
-                float2 uv=(projectionUV-0.5)/max(scale,0.001)-offset+0.5;
+                return (projectionUV-0.5)/max(scale,0.001)-offset+0.5;
+            }
+
+            fixed4 SampleReticleUV(sampler2D textureSampler, float2 uv, float textureMode)
+            {
                 fixed4 sample=tex2D(textureSampler,uv);
                 // Masks ignore stored RGB (including dark transparent borders).
                 // RedMask is the linear single-channel/BC4 path; alpha is unused.
@@ -270,6 +292,22 @@ Shader "AngularScope/Optical View"
                 else if(textureMode>0.5) sample.rgb=1;
                 sample.a*=RectangleCoverage(uv);
                 return sample;
+            }
+
+            fixed4 SampleReticleLayer(sampler2D textureSampler, float2 projectionUV,
+                                     float scale, float2 offset, float textureMode)
+            {
+                return SampleReticleUV(textureSampler,
+                    ReticleTextureUV(projectionUV,scale,offset),textureMode);
+            }
+
+            float DetailRegionCoverage(float2 detailUV)
+            {
+                // Replace the whole crop, including transparent gaps. Blend
+                // inward from its boundary; derivatives antialias zero feather.
+                float edge=min(min(detailUV.x,1-detailUV.x),min(detailUV.y,1-detailUV.y));
+                float width=max(clamp(_ReticleDetailFeather,0,0.25),max(fwidth(edge),0.000001));
+                return smoothstep(0,width,edge);
             }
 
             fixed3 BlendReticle(fixed3 background, fixed4 reticle,
@@ -286,6 +324,20 @@ Shader "AngularScope/Optical View"
                 fixed4 reticle=SampleReticleLayer(_ReticleTex,
                     ReticleProjectionUV(reticleSlope,_ReticleFocalPlane),_ReticleScale,_ReticleOffset.xy,_ReticleTextureMode);
                 fixed3 composed=BlendReticle(image,reticle,_ReticleColor.rgb,_EmissionPower,1);
+                if(_ReticleDetailEnabled>0.5)
+                {
+                    // A crop of BASE TEXTURE UV shares its focal plane, reference,
+                    // offset and size. All art and the replacement boundary use
+                    // the SAME inverse-distorted slope: distort the composite,
+                    // not each layer in its own coordinate system.
+                    float2 baseUV=ReticleTextureUV(
+                        ReticleProjectionUV(reticleSlope,_ReticleFocalPlane),_ReticleScale,_ReticleOffset.xy);
+                    float2 size=max(_ReticleDetailRegion.zw,0.000001);
+                    float2 detailUV=(baseUV-_ReticleDetailRegion.xy)/size+0.5;
+                    fixed4 detail=SampleReticleUV(_ReticleDetailTex,detailUV,_ReticleDetailTextureMode);
+                    fixed3 detailed=BlendReticle(image,detail,_ReticleColor.rgb,_EmissionPower,1);
+                    composed=lerp(composed,detailed,DetailRegionCoverage(detailUV)*RectangleCoverage(baseUV));
+                }
                 // Material-uniform condition; do not sample an unused overlay.
                 // Whether this saves GPU work depends on the target compiler.
                 if(_IlluminationOpacity>0)

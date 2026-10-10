@@ -11,7 +11,7 @@ namespace AngularScope.Editor
     {
         Texture2D source;
         Material target;
-        bool illumination;
+        int layer;
         string status;
 
         [MenuItem("Tools/AngularScope/Create Lightweight Reticle Mask")]
@@ -26,7 +26,7 @@ namespace AngularScope.Editor
             EditorGUILayout.HelpBox("Copies PNG alpha into a linear red-channel mask. Keeps full dimensions (including 4K), creates a new asset, and configures PC BC4 + mipmaps. Source is unchanged.", MessageType.Info);
             source = (Texture2D)EditorGUILayout.ObjectField("Source (alpha coverage)", source, typeof(Texture2D), false);
             target = (Material)EditorGUILayout.ObjectField("Assign to material (optional)", target, typeof(Material), false);
-            illumination = EditorGUILayout.Toggle("Illumination layer", illumination);
+            layer = EditorGUILayout.Popup("Target layer", layer, new[]{"Main reticle","Illumination overlay","Central reticle detail"});
             EditorGUILayout.HelpBox("Opaque PNGs produce a solid mask. Use transparent backgrounds. Cropping is not automatic: keep the same canvas to preserve alignment. For a cropped centre image, adjust layer size/offset as documented.", MessageType.None);
             using (new EditorGUI.DisabledScope(source == null))
                 if (GUILayout.Button("Create BC4 Mask (Keep Resolution)"))
@@ -37,7 +37,11 @@ namespace AngularScope.Editor
                         try
                         {
                             var mask = Convert(source, path);
-                            if (target != null) Assign(target, mask, illumination);
+                            if (target != null)
+                            {
+                                if(layer==2)AssignDetail(target,mask);
+                                else Assign(target,mask,layer==1);
+                            }
                             status = mask.width + " x " + mask.height + ", " + mask.format + ". New asset: " + path;
                             EditorGUIUtility.PingObject(mask);
                         }
@@ -112,7 +116,17 @@ namespace AngularScope.Editor
 
         public static void Assign(Material material, Texture2D mask, bool toIllumination)
         {
-            string prefix = toIllumination ? "_Illumination" : "_Reticle";
+            AssignLayer(material,mask,toIllumination ? "_Illumination" : "_Reticle");
+        }
+
+        public static void AssignDetail(Material material, Texture2D mask)
+        {
+            // Assignment does not enable replacement before the crop is calibrated.
+            AssignLayer(material,mask,"_ReticleDetail");
+        }
+
+        static void AssignLayer(Material material, Texture2D mask, string prefix)
+        {
             if (material == null || !material.HasProperty(prefix + "TextureMode"))
                 throw new ArgumentException("Choose an updated AngularScope material.");
             Undo.RecordObject(material, "Assign AngularScope mask");
