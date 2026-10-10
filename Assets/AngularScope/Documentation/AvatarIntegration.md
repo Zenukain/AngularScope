@@ -107,6 +107,19 @@ itself increases linearly. Do not simply blend
 the two endpoint clips for continuous zoom: linear interpolation of FOV degrees
 does not produce the intended intermediate magnification.
 
+### Optional reticle detail and near-eye tuning
+
+These are material settings, not new expression parameters. Central detail
+inherits the main reticle's focal plane/reference and stays mapped at all zooms;
+no zoom-threshold transition or texture-swap animation is required. Follow
+[the crop guide](README.md#optional-central-reticle-detail) on your lens material.
+
+Near-eye sensitivity defaults to 0. Configure it in the material Inspector or
+Setup; with LocalSpace relief its activation distance follows uniform scope scale.
+Test close/off-axis viewing at low and high zoom and at different avatar sizes.
+Neither option requires additional zoom keys. If your FX already animates one
+of these properties, that animation can override the material's edited value.
+
 ## 4. Transfer the animation into the avatar FX controller
 
 The supplied clips use paths **relative to the scope rig**, exactly:

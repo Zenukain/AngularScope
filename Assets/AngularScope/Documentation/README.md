@@ -109,6 +109,13 @@ stop inside the housing. Test horizontal and vertical movement in a headset
 before choosing a production value. Configure it in the material's Field &
 eyebox section or Scope Setup's advanced controls.
 
+For example, with world relief 12 cm, tolerance 2 cm and strength 1, the near
+response starts below 10 cm. At 6 cm the lateral gain is about 1.67x; at 10 cm
+or farther it is 1x. These are illustrative inputs, not a recommended preset.
+Gain multiplies eye offset, not magnification or field radius. Existing shadow
+colour fringe follows the changed shadow edge; no new colour effect is added.
+Set strength back to 0 to restore the original close-eye response.
+
 ## Reticle and illumination overlay
 
 Reticle layer: _ReticleTex, _ReticleColor, _EmissionPower, _ReticleScale,
@@ -168,6 +175,27 @@ its border transition still includes the base. This does not guarantee subpixel
 line visibility. Enabled detail adds one texture lookup and blending; GPU cost
 has not been benchmarked. Scope Setup preserves these material settings but does
 not author the crop; use the material inspector for this advanced option.
+
+#### Crop example and troubleshooting
+
+For a 4096-square master, a centred crop 1024 pixels wide/high begins at
+pixel (1536, 1536). Its region is `(0.5, 0.5, 0.25, 0.25)`, regardless of
+whether the full base is imported at 2048 or 4096. Keep the crop at 1024 to
+retain the master's central density; use the full master, resized to 2048,
+as the base. Do not crop the already reduced base and upscale it.
+
+- **Missing central lines:** check detail assignment, enablement and coverage
+  channel. Transparent detail replaces base ink with scenery, not with base ink.
+- **Double lines or seams:** compare crop coordinates, source artwork and line
+  weights. Keep meaningful marks away from the feather band where possible.
+- **No obvious improvement:** detail is always mapped, not activated at high zoom.
+  Improvement depends on screen resolution, artwork and crop texel density.
+  Very thin FFP lines can still disappear at low zoom.
+- **Detail colour/size differs:** use matching art and texture modes. Detail
+  has no independent tint, brightness, scale or FFP reference to adjust.
+
+The mask converter's **Central reticle detail** assignment selects RedMask on that
+material slot; it does not enable detail or calculate the crop region for you.
 
 ### Texture modes and lightweight 4K masks
 
@@ -360,7 +388,7 @@ its Lens character toggle enables a mild runtime comparison preset. Use the edit
 |---|---|
 | `_DistortionLow`, `_DistortionHigh` | Field-edge inverse lookup coefficients; positive barrel, negative pincushion |
 | `_DistortionMinMagnification`, `_DistortionMaxMagnification` | Zoom references for linear interpolation; clamp outside their range |
-| `_DistortReticle` | Apply the geometric distortion to both reticle layers, before SFP/FFP scaling |
+| `_DistortReticle` | Share the geometric lookup across main, optional central detail and illumination, before their focal-plane projections |
 | `_SceneChromaticAberration` | R/B radial image lookup offset fraction at the field edge; 0–0.02 |
 | `_ShadowChromaticAberration` | Channel-dependent pupil-radius offset fraction; 0–0.05 |
 | `_ShadowFringePalette` | 0 Warm (R outside G outside B), 1 Purple (R+B outside G); artistic palette choice |
@@ -389,7 +417,7 @@ claim of matching any particular real scope.
 The included editor-only material Inspector warns when the worst configured edge
 lookup exceeds camera coverage, but does not modify or block direct edits. Update
 the actual camera and zoom animations as well as the shader tangent. The default
-Warm is the default palette; Purple is optional. The mild preset uses distortion
+palette is Warm; Purple is optional. The mild preset uses distortion
 +0.04 / -0.005 at 1x / 6x, scene fringe 0.004 and shadow fringe 0.012.
 
 ## Limits and validation

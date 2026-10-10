@@ -2,7 +2,7 @@
 
 > **AI disclaimer:** Code and documentation were developed with generative AI, human review, and iterative Unity/VR testing. This is an optical approximation; test it in your own setup.
 
-A configurable optical-view shader and a standalone Unity example for scope creators. Includes variable magnification, SFP/FFP reticles, two independent reticle layers, a sharp field stop, a moving soft eye-box shadow, and optional lens distortion and chromatic aberration.
+A configurable optical-view shader and a standalone Unity example for scope creators. Includes variable magnification, SFP/FFP reticles, independent main/illumination layers, optional central reticle detail, a sharp field stop, a moving soft eye-box shadow, and optional lens distortion and chromatic aberration.
 
 Built for Unity's **Built-in Render Pipeline on PC**, tested in Unity 2022.3.22f1.
 
@@ -53,7 +53,11 @@ The black etched cross and red illuminated centre are independent texture layers
 
 Advanced users can optionally replace a central portion of the main reticle
 with a matching higher-density crop, sharing its focal plane and distortion.
-Existing materials keep this disabled. See [central reticle detail](Assets/AngularScope/Documentation/README.md#optional-central-reticle-detail).
+It replaces that region at every zoom; it is not a texture swap at a zoom threshold.
+Detail inherits the main layer's settings, rather than adding another independent
+focal plane. This option defaults off. See
+[central reticle detail](Assets/AngularScope/Documentation/README.md#optional-central-reticle-detail)
+for crop coordinates, memory estimates and seam checks.
 
 Monochrome art can use AlphaMask or a lightweight linear RedMask (BC4), independently
 for each layer. The included editor conversion tool preserves original PNG dimensions,
@@ -73,6 +77,12 @@ Two independent masks shape the view:
 | ![Sharp circular field stop with the eye on axis and closer to the lens](docs/images/field-stop.png) | ![Soft eye-box shadow with the eye shifted sideways and upward](docs/images/eye-box-shadow.png) |
 
 Both 1x captures keep both masks enabled. Left: on axis at 9cm. Right: 12cm away, offset 7mm horizontally and vertically. The housing supplies the physical boundary. Exit-pupil size may follow zoom or remain fixed for a forgiving view; this affects the soft shadow, not the field stop.
+
+Optional **Near-eye lateral sensitivity** makes sideways/up-down movement less
+forgiving when closer than eye relief minus axial tolerance, without adding
+centred near-distance narrowing. It defaults to 0; try 1 and test your own rig.
+This is an empirical comfort control, not measured real-scope behaviour. See
+[near-eye tuning](Assets/AngularScope/Documentation/README.md#optional-near-eye-lateral-sensitivity).
 
 ## Lens distortion and chromatic aberration
 
@@ -117,6 +127,9 @@ The scope housing, mount, checkerboard range, meshes and reticle textures are ge
 
 Lens character, HDR and 4x MSAA start disabled. All comparisons use temporary
 material/render-texture copies and restore the source settings on exit.
+The demo supplies no central-detail texture or on-screen near-eye control;
+configure those in a copied lens material before entering Play mode. See the
+[example's advanced options](Assets/AngularScope/Examples/README.md#advanced-material-options).
 HDR preserves bright scene values; MSAA smooths geometry edges, not reticle-texture
 aliasing. Neither enables a post-processing stack automatically. See
 [example controls](Assets/AngularScope/Examples/README.md) and

@@ -75,6 +75,12 @@ fit of a real product's distorted visible field.
 - Main and illumination focal planes can differ; both use the shared FFP size
   reference. FFP reference is not automatically the maximum magnification.
 
+Central reticle detail is configured in the material Inspector, not this window.
+Apply preserves its texture, enable flag, crop region and feathering; those
+settings are not stored in a Setup specification profile. See
+[the crop workflow](README.md#optional-central-reticle-detail). Near-eye sensitivity,
+unlike the crop settings, is imported/applied by Setup and stored in its profile.
+
 Axes and lens centre use rigid renderer local coordinates. Prefer positive
 uniform scale. Saved axial/radial reference scales convert physical distances to
 shader-local values. Recapturing reference size is explicit and keeps cm values.
@@ -106,8 +112,9 @@ edits the draft only. Review and Apply explicitly.
   Positive coefficients give barrel distortion; negative give pincushion. The low
   and high coefficients interpolate linearly between their own zoom references.
   The percent label describes the edge lookup coefficient, not exact feature displacement.
-- The reticle toggle applies the same geometric lookup to **both** reticle layers,
-  before their independent SFP/FFP projections. Off leaves both reticles undistorted.
+- The reticle toggle applies one geometric lookup to the main reticle, optional
+  central detail and illumination. Main and illumination retain independent
+  SFP/FFP projections; detail follows the main projection. Off leaves them undistorted.
   This is an artistic choice, not an exact optical prescription for either focal plane.
 - Scene fringe offsets R/B radially: a radius-squared factor multiplies the lookup
   slope, so displacement grows roughly cubically toward the edge. Shadow fringe

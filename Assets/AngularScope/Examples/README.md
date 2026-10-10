@@ -23,6 +23,25 @@ The default view is 12cm behind the rear lens. 1x/3x/6x camera FOVs are
 black cross with a separate red centre dot; its ticks are NOT MOA/MRAD marks.
 The test board is 20m from the rear lens, with coloured landmarks nearby.
 
+## Advanced material options
+
+The bundled material starts with central detail disabled and near-eye sensitivity
+at 0. The demo has no dedicated controls for these options and supplies no detail
+crop. Duplicate the lens material, assign the copy to Rear Lens Display, and
+configure it in Edit mode before testing. The controller clones that material
+when Play begins; edits to the source asset during Play are not a reliable way
+to adjust the runtime copy.
+
+- [Central reticle detail](../Documentation/README.md#optional-central-reticle-detail):
+  provide matching full/cropped artwork and its base-UV region. Compare seams at
+  low/high zoom, with Lens character both off and on.
+- [Near-eye lateral sensitivity](../Documentation/README.md#optional-near-eye-lateral-sensitivity):
+  start at 1, move closer with E, then shift horizontally and vertically. A
+  centred eye should not acquire extra near-side narrowing. Compare with 0,
+  and repeat at maximum zoom with the linked pupil enabled.
+
+Desktop tuning checks the effect, not headset comfort or stereo compatibility.
+
 ## Prefab structure
 
 Prefabs/AngularScopeExample.prefab is independent of the demo range/viewer.
